@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuesto Público Municipal - Herramienta Educativa</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Presupuesto Público Municipal</h1>
+        <p>Herramienta para el análisis presupuestal - Taller de Contaduría Pública</p>
+    </header>
+    
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="proyeccion">1. Proyección Inicial</div>
+            <div class="tab" data-tab="modificaciones">2. Modificaciones</div>
+            <div class="tab" data-tab="indicadores">3. Indicadores</div>
+            <div class="tab" data-tab="analisis">4. Análisis</div>
+        </div>
+        
+        <!-- Proyección Inicial -->
+        <div id="proyeccion" class="tab-content active">
+            <div class="instructions">
+                <h3>Instrucciones para la proyección inicial</h3>
+                <p>Complete los datos históricos y las proyecciones para el año 2026 según los lineamientos del taller. Recuerde mantener el equilibrio entre ingresos y gastos.</p>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" data-subtab="ingresos-proy">Ingresos</div>
+                <div class="tab" data-subtab="gastos-proy">Gastos</div>
+            </div>
+            
+            <div id="ingresos-proy" class="subtab-content active">
+                <h2>Presupuesto de Ingresos 2026</h2>
+                <table id="ingresos-table">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>2025 (Base)</th>
+                            <th>Tasa Crecimiento (%)</th>
+                            <th>2026 (Proyectado)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Ingresos Tributarios -->
+                        <tr class="category">
+                            <td colspan="4"><strong>Ingresos Tributarios</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Impuesto Predial</td>
+                            <td><input type="number" id="predial-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-predial" value="50.2"></td>
+                            <td><span id="predial-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Impuesto de Industria y Comercio</td>
+                            <td><input type="number" id="industria-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-industria" value="50.2"></td>
+                            <td><span id="industria-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Tasa por Ocupación de Vías (Nuevo)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><input type="number" id="tasa-vias" value="10000"></td>
+                        </tr>
+                        
+                        <!-- Ingresos No Tributarios -->
+                        <tr class="category">
+                            <td colspan="4"><strong>Ingresos No Tributarios</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Venta de Bienes y Servicios</td>
+                            <td><input type="number" id="venta-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-venta" value="80"></td>
+                            <td><span id="venta-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Otros Ingresos No Tributarios</td>
+                            <td><input type="number" id="otros-no-trib-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-otros-no-trib" value="60"></td>
+                            <td><span id="otros-no-trib-2026" class="calculated">0</span></td>
+                        </tr>
+                        
+                        <!-- Transferencias -->
+                        <tr class="category">
+                            <td colspan="4"><strong>Transferencias</strong></td>
+                        </tr>
+                        <tr>
+                            <td>SGP - Propósito General</td>
+                            <td><input type="number" id="sgp-2024" class="base-input" value="0"></td>
+                            <td><span id="crec-sgp">13</span>% (Inflación 2025 + 4)</td>
+                            <td><span id="sgp-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>FONPET</td>
+                            <td><input type="number" id="fonpet-2023" class="base-input" value="0"></td>
+                            <td>20%</td>
+                            <td><span id="fonpet-2026" class="calculated">0</span></td>
+                        </tr>
+                        
+                        <!-- Recursos de Capital -->
+                        <tr class="category">
+                            <td colspan="4"><strong>Recursos de Capital</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Crédito FINDETER EXTERNO</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><input type="number" id="credito-findeter" value="20000"></td>
+                        </tr>
+                        <tr>
+                            <td>Crédito ENTerritorio</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><input type="number" id="credito-enterritorio" value="20000"></td>
+                        </tr>
+                        <tr>
+                            <td>Donación Gobierno Alemán</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><input type="number" id="donacion-alemana" value="48000"></td>
+                        </tr>
+                        
+                        <tr class="total">
+                            <td><strong>TOTAL INGRESOS</strong></td>
+                            <td><span id="total-ingresos-2025">0</span></td>
+                            <td></td>
+                            <td><span id="total-ingresos-2026">0</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="gastos-proy" class="subtab-content">
+                <h2>Presupuesto de Gastos 2026</h2>
+                <table id="gastos-table">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>2025 (Base)</th>
+                            <th>Tasa Crecimiento (%)</th>
+                            <th>2026 (Proyectado)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Gastos de Funcionamiento -->
+                        <tr class="category">
+                            <td colspan="4"><strong>Gastos de Funcionamiento</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Servicios Personales</td>
+                            <td><input type="number" id="serv-personales-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-serv-personales" value="14" max="14"></td>
+                            <td><span id="serv-personales-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Honorarios Concejales (15% Predial)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span id="honorarios-concejales" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Gastos Generales</td>
+                            <td><input type="number" id="gastos-generales-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-gastos-generales" value="8"></td>
+                            <td><span id="gastos-generales-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Sistematización</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><input type="number" id="sistematizacion" value="594"></td>
+                        </tr>
+                        
+                        <!-- Contribuciones Nómina -->
+                        <tr>
+                            <td>Contribuciones Nómina (Calculadas)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span id="contribuciones-nomina" class="calculated">0</span></td>
+                        </tr>
+                        
+                        <!-- Transferencias -->
+                        <tr class="category">
+                            <td colspan="4"><strong>Transferencias</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Fondo Local Deporte y Cultura</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span id="fondo-deporte-cultura" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Fondo Local de Salud</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span id="fondo-salud" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Concejo Municipal (60 smmlv)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span id="concejo-municipal" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Personería Municipal (190 smmlv)</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span id="personeria-municipal" class="calculated">0</span></td>
+                        </tr>
+                        
+                        <!-- Gastos de Inversión -->
+                        <tr class="category">
+                            <td colspan="4"><strong>Gastos de Inversión</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Proyecto 1</td>
+                            <td><input type="number" id="proyecto1-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-proyecto1" value="20"></td>
+                            <td><span id="proyecto1-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Proyecto 2</td>
+                            <td><input type="number" id="proyecto2-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-proyecto2" value="24"></td>
+                            <td><span id="proyecto2-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Proyecto 3</td>
+                            <td><input type="number" id="proyecto3-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-proyecto3" value="36"></td>
+                            <td><span id="proyecto3-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Proyecto 4</td>
+                            <td><input type="number" id="proyecto4-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-proyecto4" value="20"></td>
+                            <td><span id="proyecto4-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>Cobertura Salud</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><input type="number" id="cobertura-salud" value="170000"></td>
+                        </tr>
+                        
+                        <tr class="total">
+                            <td><strong>TOTAL GASTOS</strong></td>
+                            <td><span id="total-gastos-2025">0</span></td>
+                            <td></td>
+                            <td><span id="total-gastos-2026">0</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="balance-alert" class="alert" style="display: none;"></div>
+            <button id="calcular-proyeccion">Calcular Proyección</button>
+            <button id="verificar-equilibrio">Verificar Equilibrio Presupuestal</button>
+        </div>
+        
+        <!-- Modificaciones Presupuestales -->
+        <div id="modificaciones" class="tab-content">
+            <div class="instructions">
+                <h3>Instrucciones para modificaciones presupuestales</h3>
+                <p>Registre aquí las modificaciones al presupuesto inicial durante la vigencia fiscal. Puede agregar adiciones, reducciones o traslados entre diferentes partidas.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo-modificacion">Tipo de Modificación:</label>
+                <select id="tipo-modificacion" class="form-control">
+                    <option value="adicion">Adición</option>
+                    <option value="reduccion">Reducción</option>
+                    <option value="traslado">Traslado</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="area-modificacion">Área Afectada:</label>
+                <select id="area-modificacion" class="form-control">
+                    <option value="ingresos">Ingresos</option>
+                    <option value="gastos">Gastos</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="concepto-modificacion">Concepto:</label>
+                <select id="concepto-modificacion" class="form-control">
+                    <!-- Opciones se llenarán dinámicamente -->
+                </select>
+            </div>
+            
+            <div class="form-group" id="concepto-destino-group" style="display: none;">
+                <label for="concepto-destino">Concepto Destino (para traslados):</label>
+                <select id="concepto-destino" class="form-control">
+                    <!-- Opciones se llenarán dinámicamente -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="valor-modificacion">Valor (millones):</label>
+                <input type="number" id="valor-modificacion" class="form-control" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="justificacion-modificacion">Justificación:</label>
+                <textarea id="justificacion-modificacion" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <button id="agregar-modificacion">Agregar Modificación</button>
+            
+            <h3>Historial de Modificaciones</h3>
+            <table id="modificaciones-table">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Área</th>
+                        <th>Concepto</th>
+                        <th>Concepto Destino</th>
+                        <th>Valor</th>
+                        <th>Justificación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Se llenará dinámicamente -->
+                </tbody>
+            </table>
+            
+            <h3>Presupuesto Actualizado</h3>
+            <div class="tabs">
+                <div class="tab active" data-subtab="ingresos-act">Ingresos Actualizados</div>
+                <div class="tab" data-subtab="gastos-act">Gastos Actualizados</div>
+            </div>
+            
+            <div id="ingresos-act" class="subtab-content active">
+                <table id="ingresos-actualizados-table">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Proyección Inicial</th>
+                            <th>Modificaciones</th>
+                            <th>Total Actualizado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="gastos-act" class="subtab-content">
+                <table id="gastos-actualizados-table">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Proyección Inicial</th>
+                            <th>Modificaciones</th>
+                            <th>Total Actualizado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="balance-modificaciones" class="alert" style="display: none;"></div>
+        </div>
+        
+        <!-- Indicadores Presupuestales -->
+        <div id="indicadores" class="tab-content">
+            <div class="instructions">
+                <h3>Indicadores Presupuestales</h3>
+                <p>A continuación se presentan los principales indicadores calculados automáticamente a partir de su presupuesto. Estos indicadores le ayudarán a evaluar la salud financiera del municipio.</p>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="ejecucionChart"></canvas>
+            </div>
+            
+            <table id="indicadores-table">
+                <thead>
+                    <tr>
+                        <th>Indicador</th>
+                        <th>Fórmula</th>
+                        <th>Valor</th>
+                        <th>Interpretación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ejecución de Ingresos</td>
+                        <td>(Recaudado / Presupuestado) * 100</td>
+                        <td><span id="ejecucion-ingresos">0</span>%</td>
+                        <td id="interpretacion-ejecucion-ingresos">-</td>
+                    </tr>
+                    <tr>
+                        <td>Ejecución de Gastos</td>
+                        <td>(Ejecutado / Presupuestado) * 100</td>
+                        <td><span id="ejecucion-gastos">0</span>%</td>
+                        <td id="interpretacion-ejecucion-gastos">-</td>
+                    </tr>
+                    <tr>
+                        <td>Relación Funcionamiento / Gasto Total</td>
+                        <td>(Gastos Funcionamiento / Gastos Totales) * 100</td>
+                        <td><span id="relacion-funcionamiento">0</span>%</td>
+                        <td id="interpretacion-funcionamiento">-</td>
+                    </tr>
+                    <tr>
+                        <td>Relación Inversión / Gasto Total</td>
+                        <td>(Gastos Inversión / Gastos Totales) * 100</td>
+                        <td><span id="relacion-inversion">0</span>%</td>
+                        <td id="interpretacion-inversion">-</td>
+                    </tr>
+                    <tr>
+                        <td>Dependencia de Transferencias</td>
+                        <td>(Transferencias / Ingresos Totales) * 100</td>
+                        <td><span id="dependencia-transferencias">0</span>%</td>
+                        <td id="interpretacion-transferencias">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="chart-container">
+                <canvas id="composicionGastosChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Análisis Presupuestal -->
+        <div id="analisis" class="tab-content">
+            <div class="instructions">
+                <h3>Análisis Presupuestal</h3>
+                <p>Realice aquí su análisis cualitativo del comportamiento presupuestal basado en los indicadores calculados. Considere aspectos como sostenibilidad financiera, priorización de gastos, dependencia de transferencias, entre otros.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="analisis-texto">Análisis:</label>
+                <textarea id="analisis-texto" class="form-control" rows="10" placeholder="Escriba aquí su análisis..."></textarea>
+            </div>
+            
+            <button id="guardar-analisis">Guardar Análisis</button>
+            
+            <h3>Resumen de Indicadores</h3>
+            <div id="resumen-indicadores">
+                <!-- Se llenará dinámicamente -->
+            </div>
+            
+            <h3>Recomendaciones Automáticas</h3>
+            <div id="recomendaciones" class="alert">
+                <!-- Se generarán automáticamente -->
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Herramienta para el Taller de Presupuesto Público - Contaduría Pública Colombia</p>
+        <p>© 2025 - Universidad del Tablero</p>
+        <button id="exportar-datos">Exportar Datos</button>
+        <input type="file" id="importar-datos" accept=".json" style="display: none;">
+        <button onclick="document.getElementById('importar-datos').click()">Importar Datos</button>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
