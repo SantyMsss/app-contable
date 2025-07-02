@@ -9,7 +9,7 @@
 <body>
     <header>
         <h1>Presupuesto Público Municipal</h1>
-        <p>Herramienta para el análisis presupuestal - Taller de Contaduría Pública</p>
+        <p>Herramienta para el análisis presupuestal - Contaduría Pública</p>
     </header>
     
     <div class="container">
@@ -123,6 +123,13 @@
                             <td>-</td>
                             <td><input type="number" id="donacion-alemana" value="48000"></td>
                         </tr>
+
+                        <tr>
+                            <td colspan="4">
+                                <button type="button" id="agregar-ingreso">+ Añadir ingreso</button>
+                            </td>
+                        </tr>
+
                         
                         <tr class="total">
                             <td><strong>TOTAL INGRESOS</strong></td>
@@ -246,6 +253,13 @@
                             <td>-</td>
                             <td><input type="number" id="cobertura-salud" value="170000"></td>
                         </tr>
+
+                        <tr>
+                            <td colspan="4">
+                                <button type="button" id="agregar-gasto">+ Añadir gasto</button>
+                            </td>
+                        </tr>
+
                         
                         <tr class="total">
                             <td><strong>TOTAL GASTOS</strong></td>
@@ -457,11 +471,10 @@
     </div>
     
     <footer>
-        <p>Herramienta para el Taller de Presupuesto Público - Contaduría Pública Colombia</p>
-        <p>© 2025 - Universidad del Tablero</p>
+        <p>Herramienta de asistencia para Presupuesto Público - Harold Andres Lopez Sepulveda </p>
+        <p> Desarrollada por: Santiago Martinez Serna - © 2025</p>
         <button id="exportar-datos">Exportar Datos</button>
-        <input type="file" id="importar-datos" accept=".json" style="display: none;">
-        <button onclick="document.getElementById('importar-datos').click()">Importar Datos</button>
+       
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

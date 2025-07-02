@@ -58,7 +58,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cargar datos de ejemplo (para demostración)
     cargarDatosEjemplo();
+
+
+
+
+
 });
+
+// Delegar evento de eliminación de filas dinámicas
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('btn-eliminar-fila')) {
+        const id = e.target.getAttribute('data-id');
+        const tipo = e.target.getAttribute('data-tipo'); // 'ingreso' o 'gasto'
+        const fila = document.querySelector(`.fila-dinamica-${tipo}[data-id="${id}"]`);
+
+        if (fila) {
+            // Obtener el concepto escrito en el campo de texto
+            const conceptoInput = document.getElementById(`concepto-${tipo}-${id}`);
+            const concepto = conceptoInput?.value?.trim();
+
+            // Eliminar de presupuesto.proyeccion si existe
+            if (concepto && presupuesto.proyeccion[tipo + 's'][concepto]) {
+                delete presupuesto.proyeccion[tipo + 's'][concepto];
+            }
+
+            // Eliminar la fila del DOM
+            fila.remove();
+
+            // Recalcular proyecciones y totales sin ese concepto
+            calcularProyeccion();
+        }
+    }
+});
+
+
 
 // Funciones para tabs
 function setupTabs(tabSelector, contentSelector, attribute = 'data-tab') {
@@ -91,14 +124,29 @@ function setupTabs(tabSelector, contentSelector, attribute = 'data-tab') {
 
 function toggleDestinoTraslado() {
     const tipo = document.getElementById('tipo-modificacion').value;
+    const area = document.getElementById('area-modificacion');
     const destinoGroup = document.getElementById('concepto-destino-group');
-    
+
     if (tipo === 'traslado') {
         destinoGroup.style.display = 'block';
+
+        // Forzar selección de 'gastos' y deshabilitar
+        area.value = 'gastos';
+        area.disabled = true;
+
+        // Cargar conceptos disponibles para gastos
+        actualizarConceptosModificacion();
     } else {
         destinoGroup.style.display = 'none';
+
+        // Habilitar selector de área
+        area.disabled = false;
+
+        // Actualizar conceptos según nueva área seleccionada (si es que cambió)
+        actualizarConceptosModificacion();
     }
 }
+
 
 function actualizarConceptosModificacion() {
     const area = document.getElementById('area-modificacion').value;
@@ -143,11 +191,12 @@ function calcularProyeccion() {
     actualizarTotales();
     
     // Mostrar mensaje de éxito
-    mostrarMensaje('Proyección calculada correctamente', 'success');
+    //mostrarMensaje('Proyección calculada correctamente', 'success');
 }
 
 function calcularIngresos() {
     // Ingresos Tributarios
+    presupuesto.proyeccion.ingresos = {}; // Limpiar ingresos antes de recalcular
     const predial2025 = parseFloat(document.getElementById('predial-2025').value) || 0;
     const crecimientoPredial = parseFloat(document.getElementById('crec-predial').value) || 0;
     const predial2026 = predial2025 * (1 + crecimientoPredial / 100);
@@ -199,13 +248,29 @@ function calcularIngresos() {
     const donacionAlemana = parseFloat(document.getElementById('donacion-alemana').value) || 0;
     presupuesto.proyeccion.ingresos['Donación Gobierno Alemán'] = donacionAlemana;
     
-    // Calcular total ingresos 2025
-    const totalIngresos2025 = predial2025 + industria2025 + venta2025 + otrosNoTrib2025 + sgp2024 + fonpet2023;
+   let totalBaseDinamicoIngresos = 0;
+
+    document.querySelectorAll('[id^="concepto-ingreso-"]').forEach(input => {
+        const id = input.id.split('-')[2];
+        const concepto = input.value.trim() || `Ingreso ${id}`;
+        const base = parseFloat(document.getElementById(`base-ingreso-${id}`).value) || 0;
+        const tasa = parseFloat(document.getElementById(`crec-ingreso-${id}`).value) || 0;
+        const proy = base * (1 + tasa / 100);
+        document.getElementById(`proy-ingreso-${id}`).textContent = formatNumber(proy);
+        presupuesto.proyeccion.ingresos[concepto] = proy;
+        totalBaseDinamicoIngresos += base;
+    });
+
+    // Sumar al total base
+    const totalIngresos2025 = predial2025 + industria2025 + venta2025 + otrosNoTrib2025 + sgp2024 + fonpet2023 + totalBaseDinamicoIngresos;
     document.getElementById('total-ingresos-2025').textContent = formatNumber(totalIngresos2025);
-}
+
+    }
 
 function calcularGastos() {
     // Gastos de Funcionamiento
+
+    presupuesto.proyeccion.gastos = {}; // Limpiar gastos antes de recalcular
     const servPersonales2025 = parseFloat(document.getElementById('serv-personales-2025').value) || 0;
     const crecServPersonales = parseFloat(document.getElementById('crec-serv-personales').value) || 0;
     const servPersonales2026 = servPersonales2025 * (1 + Math.min(crecServPersonales, 14) / 100);
@@ -285,10 +350,24 @@ function calcularGastos() {
     const coberturaSalud = parseFloat(document.getElementById('cobertura-salud').value) || 0;
     presupuesto.proyeccion.gastos['Cobertura Salud'] = coberturaSalud;
     
-    // Calcular total gastos 2025
-    const totalGastos2025 = servPersonales2025 + gastosGenerales2025 + 
-                           proyecto1_2025 + proyecto2_2025 + proyecto3_2025 + proyecto4_2025;
+    let totalBaseDinamicoGastos = 0;
+
+    document.querySelectorAll('[id^="concepto-gasto-"]').forEach(input => {
+        const id = input.id.split('-')[2];
+        const concepto = input.value.trim() || `Gasto ${id}`;
+        const base = parseFloat(document.getElementById(`base-gasto-${id}`).value) || 0;
+        const tasa = parseFloat(document.getElementById(`crec-gasto-${id}`).value) || 0;
+        const proy = base * (1 + tasa / 100);
+        document.getElementById(`proy-gasto-${id}`).textContent = formatNumber(proy);
+        presupuesto.proyeccion.gastos[concepto] = proy;
+        totalBaseDinamicoGastos += base;
+    });
+
+    // Sumar al total base
+    const totalGastos2025 = servPersonales2025 + gastosGenerales2025 + proyecto1_2025 + proyecto2_2025 + proyecto3_2025 + proyecto4_2025 + totalBaseDinamicoGastos;
     document.getElementById('total-gastos-2025').textContent = formatNumber(totalGastos2025);
+
+
 }
 
 function actualizarTotales() {
@@ -939,3 +1018,52 @@ function cargarDatosEjemplo() {
     // Actualizar indicadores y gráficos
     actualizarGraficos();
 }
+
+// Eventos para añadir filas dinámicas
+document.getElementById('agregar-ingreso').addEventListener('click', function () {
+    const tabla = document.querySelector('#ingresos-table tbody');
+    const fila = document.createElement('tr');
+    const id = Date.now();
+
+    fila.classList.add('fila-dinamica-ingreso');
+    fila.setAttribute('data-id', id);
+
+    fila.innerHTML = `
+        <td><input type="text" placeholder="Nuevo Ingreso" id="concepto-ingreso-${id}"></td>
+        <td><input type="number" class="base-input" id="base-ingreso-${id}" value="0"></td>
+        <td><input type="number" id="crec-ingreso-${id}" value="0"></td>
+        <td>
+            <span id="proy-ingreso-${id}" class="calculated">0</span>
+            <button class="btn-eliminar-fila" data-id="${id}" data-tipo="ingreso">✖</button>
+        </td>
+    `;
+    tabla.insertBefore(fila, tabla.querySelector('.total'));
+
+    document.getElementById(`base-ingreso-${id}`).addEventListener('input', calcularProyeccion);
+    document.getElementById(`crec-ingreso-${id}`).addEventListener('input', calcularProyeccion);
+});
+
+document.getElementById('agregar-gasto').addEventListener('click', function () {
+    const tabla = document.querySelector('#gastos-table tbody');
+    const fila = document.createElement('tr');
+    const id = Date.now();
+
+    fila.classList.add('fila-dinamica-gasto');
+    fila.setAttribute('data-id', id);
+
+    fila.innerHTML = `
+        <td><input type="text" placeholder="Nuevo Gasto" id="concepto-gasto-${id}"></td>
+        <td><input type="number" class="base-input" id="base-gasto-${id}" value="0"></td>
+        <td><input type="number" id="crec-gasto-${id}" value="0"></td>
+        <td>
+            <span id="proy-gasto-${id}" class="calculated">0</span>
+            <button class="btn-eliminar-fila" data-id="${id}" data-tipo="gasto">✖</button>
+        </td>
+    `;
+    tabla.insertBefore(fila, tabla.querySelector('.total'));
+
+    document.getElementById(`base-gasto-${id}`).addEventListener('input', calcularProyeccion);
+    document.getElementById(`crec-gasto-${id}`).addEventListener('input', calcularProyeccion);
+});
+
+

@@ -177,3 +177,24 @@ footer {
 .btn-eliminar:hover {
     background-color: #c0392b;
 }
+
+button#agregar-ingreso,
+button#agregar-gasto {
+    margin-top: 10px;
+    background-color: var(--success-color);
+}
+
+.btn-eliminar-fila {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    font-size: 0.9rem;
+    padding: 0.2rem 0.4rem;
+    margin-left: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-eliminar-fila:hover {
+    background-color: #c0392b;
+}
