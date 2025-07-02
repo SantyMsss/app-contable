@@ -272,8 +272,7 @@
             </div>
             
             <div id="balance-alert" class="alert" style="display: none;"></div>
-            <button id="calcular-proyeccion">Calcular Proyección</button>
-            <button id="verificar-equilibrio">Verificar Equilibrio Presupuestal</button>
+     
         </div>
         
         <!-- Modificaciones Presupuestales -->
@@ -393,8 +392,22 @@
             </div>
             
             <div class="chart-container">
-                <canvas id="ejecucionChart"></canvas>
+<!-- Gráfico de ejecución de ingresos y gastos -->
+<canvas id="ejecucionChart" height="200"></canvas>
+
+<!-- Gráfico de composición del gasto -->
+<canvas id="composicionGastosChart" height="200"></canvas>
+
+<!-- Gráfico comparativo entre ingresos y gastos 2025 vs 2026 -->
+<canvas id="comparativoLineChart" height="200"></canvas>
+
+<!-- Gráfico de barras horizontales con los 5 conceptos de gasto más altos -->
+<canvas id="topConceptosChart" height="200"></canvas>
+
+<!-- Resumen estadístico -->
+<div id="resumen-estadistico" class="instructions"></div>
             </div>
+
             
             <table id="indicadores-table">
                 <thead>
@@ -457,6 +470,10 @@
             </div>
             
             <button id="guardar-analisis">Guardar Análisis</button>
+                    <!-- En el div con id="analisis" -->
+<div class="form-group">
+    <button id="generar-pdf" class="btn-exportar">Generar Reporte PDF</button>
+</div>
             
             <h3>Resumen de Indicadores</h3>
             <div id="resumen-indicadores">
@@ -477,6 +494,10 @@
        
     </footer>
 
+    <!-- Agrega esto antes del script de app.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="app.js"></script>
 </body>

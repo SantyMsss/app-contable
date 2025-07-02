@@ -30,16 +30,16 @@ document.addEventListener('DOMContentLoaded', function() {
     setupTabs('.tabs .tab[data-subtab]', '.subtab-content', 'data-subtab');
     
     // Eventos para proyección inicial
-    document.querySelectorAll('.base-input').forEach(input => {
-        input.addEventListener('change', calcularProyeccion);
+    // Ejecutar automáticamente proyección y verificación al cambiar cualquier input relevante
+   // Listener delegado: cualquier cambio en un input[type="number"] recalcula y verifica
+    document.addEventListener('input', function(e) {
+        if (e.target.matches('input[type="number"]')) {
+            calcularProyeccion();
+            verificarEquilibrio();
+        }
     });
-    
-    document.querySelectorAll('input[id^="crec-"]').forEach(input => {
-        input.addEventListener('change', calcularProyeccion);
-    });
-    
-    document.getElementById('calcular-proyeccion').addEventListener('click', calcularProyeccion);
-    document.getElementById('verificar-equilibrio').addEventListener('click', verificarEquilibrio);
+
+
     
     // Eventos para modificaciones
     document.getElementById('tipo-modificacion').addEventListener('change', toggleDestinoTraslado);
@@ -58,6 +58,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cargar datos de ejemplo (para demostración)
     cargarDatosEjemplo();
+    actualizarGraficos();
+
+    // En la función setupTabs(), cuando se detecta el clic en la pestaña de Indicadores:
+if (target === 'indicadores') {
+    calcularIndicadores();
+    actualizarGraficos();
+}
 
 
 
@@ -425,6 +432,17 @@ function agregarModificacion() {
         mostrarMensaje('Complete todos los campos requeridos', 'danger');
         return;
     }
+
+    // Verificar disponibilidad del concepto origen (solo en reducción y traslado)
+if (tipo === 'reduccion' || tipo === 'traslado') {
+    const disponible = presupuesto.actualizado[area][concepto] || 0;
+
+    if (valor > disponible) {
+        mostrarMensaje(`No se puede ${tipo === 'traslado' ? 'trasladar' : 'reducir'} ${formatNumber(valor)} millones del concepto "${concepto}" porque solo hay disponibles ${formatNumber(disponible)} millones.`, 'danger');
+        return;
+    }
+}
+
     
     // Crear objeto de modificación
     const modificacion = {
@@ -437,6 +455,7 @@ function agregarModificacion() {
         justificacion,
         fecha: new Date().toLocaleDateString()
     };
+
     
     // Agregar al array de modificaciones
     presupuesto.modificaciones.push(modificacion);
@@ -699,104 +718,153 @@ function calcularIndicadores() {
 }
 
 function inicializarGraficos() {
-    // Gráfico de ejecución
-    const ejecucionCtx = document.getElementById('ejecucionChart').getContext('2d');
-    presupuesto.chartEjecucion = new Chart(ejecucionCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Ingresos', 'Gastos'],
-            datasets: [{
-                label: '% de Ejecución',
-                data: [0, 0],
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 99, 132, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
+    // Verificar si los elementos canvas existen antes de crear gráficos
+    const ejecucionCtx = document.getElementById('ejecucionChart')?.getContext('2d');
+    const composicionCtx = document.getElementById('composicionGastosChart')?.getContext('2d');
+    const comparativoCtx = document.getElementById('comparativoLineChart')?.getContext('2d');
+    const topCtx = document.getElementById('topConceptosChart')?.getContext('2d');
+
+    if (ejecucionCtx && !presupuesto.chartEjecucion) {
+        presupuesto.chartEjecucion = new Chart(ejecucionCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Ingresos', 'Gastos'],
+                datasets: [{
+                    label: '% Ejecución',
+                    data: [0, 0],
+                    backgroundColor: ['#3498db', '#e74c3c']
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 100 }
                 }
             }
-        }
-    });
-    
-    // Gráfico de composición de gastos
-    const composicionGastosCtx = document.getElementById('composicionGastosChart').getContext('2d');
-    presupuesto.chartComposicionGastos = new Chart(composicionGastosCtx, {
-        type: 'pie',
-        data: {
-            labels: ['Funcionamiento', 'Inversión', 'Servicio deuda', 'Otros'],
-            datasets: [{
-                data: [0, 0, 0, 0],
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(75, 192, 192, 0.7)'
-                ],
-                borderWidth: 1
-            }]
-        }
-    });
+        });
+    }
+
+    if (composicionCtx && !presupuesto.chartComposicionGastos) {
+        presupuesto.chartComposicionGastos = new Chart(composicionCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Funcionamiento', 'Inversión', 'Deuda', 'Otros'],
+                datasets: [{
+                    data: [0, 0, 0, 0],
+                    backgroundColor: ['#2ecc71', '#f1c40f', '#e67e22', '#9b59b6']
+                }]
+            }
+        });
+    }
+
+    if (comparativoCtx && !presupuesto.chartComparativo) {
+        presupuesto.chartComparativo = new Chart(comparativoCtx, {
+            type: 'line',
+            data: {
+                labels: ['2025', '2026'],
+                datasets: [
+                    {
+                        label: 'Ingresos',
+                        data: [0, 0],
+                        borderColor: '#3498db',
+                        fill: false,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Gastos',
+                        data: [0, 0],
+                        borderColor: '#e74c3c',
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            }
+        });
+    }
+
+    if (topCtx && !presupuesto.chartTopConceptos) {
+        presupuesto.chartTopConceptos = new Chart(topCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Valor (millones)',
+                    data: [],
+                    backgroundColor: '#34495e'
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: { beginAtZero: true }
+                }
+            }
+        });
+    }
 }
 
+
+
+
 function actualizarGraficos() {
-    calcularIndicadores();
+    // Asegurarse de que los gráficos están inicializados
+    inicializarGraficos();
     
-    // Actualizar gráfico de ejecución
-    presupuesto.chartEjecucion.data.datasets[0].data = [
-        presupuesto.indicadores.ejecucionIngresos,
-        presupuesto.indicadores.ejecucionGastos
-    ];
-    presupuesto.chartEjecucion.update();
-    
-    // Calcular composición de gastos para el gráfico
-    const gastosFuncionamiento = 
-        (presupuesto.actualizado.gastos['Servicios Personales'] || 0) +
-        (presupuesto.actualizado.gastos['Honorarios Concejales'] || 0) +
-        (presupuesto.actualizado.gastos['Gastos Generales'] || 0) +
-        (presupuesto.actualizado.gastos['Sistematización'] || 0) +
-        (presupuesto.actualizado.gastos['Pensiones'] || 0) +
-        (presupuesto.actualizado.gastos['Cesantías'] || 0) +
-        (presupuesto.actualizado.gastos['EPS'] || 0) +
-        (presupuesto.actualizado.gastos['Caja de Compensación'] || 0) +
-        (presupuesto.actualizado.gastos['ESAP, Escuelas industriales'] || 0) +
-        (presupuesto.actualizado.gastos['ARL'] || 0) +
-        (presupuesto.actualizado.gastos['Concejo Municipal'] || 0) +
-        (presupuesto.actualizado.gastos['Personería Municipal'] || 0);
-    
-    const gastosInversion = 
-        (presupuesto.actualizado.gastos['Proyecto 1'] || 0) +
-        (presupuesto.actualizado.gastos['Proyecto 2'] || 0) +
-        (presupuesto.actualizado.gastos['Proyecto 3'] || 0) +
-        (presupuesto.actualizado.gastos['Proyecto 4'] || 0) +
-        (presupuesto.actualizado.gastos['Cobertura Salud'] || 0);
-    
-    // Asumimos un 5% para servicio de deuda (ejemplo)
-    const servicioDeuda = Object.values(presupuesto.actualizado.gastos).reduce((a, b) => a + b, 0) * 0.05;
-    
-    // El resto es "otros"
-    const otrosGastos = Object.values(presupuesto.actualizado.gastos).reduce((a, b) => a + b, 0) - 
-                        gastosFuncionamiento - gastosInversion - servicioDeuda;
-    
-    // Actualizar gráfico de composición
-    presupuesto.chartComposicionGastos.data.datasets[0].data = [
-        gastosFuncionamiento,
-        gastosInversion,
-        servicioDeuda,
-        Math.max(0, otrosGastos)
-    ];
-    presupuesto.chartComposicionGastos.update();
+    calcularIndicadores(); // Esto ya actualiza las variables de ejecución
+
+    const ingresos2025 = parseFloat(document.getElementById('total-ingresos-2025')?.textContent.replace(/\./g, '')) || 0;
+    const ingresos2026 = Object.values(presupuesto.actualizado.ingresos).reduce((a, b) => a + b, 0);
+    const gastos2025 = parseFloat(document.getElementById('total-gastos-2025')?.textContent.replace(/\./g, '')) || 0;
+    const gastos2026 = Object.values(presupuesto.actualizado.gastos).reduce((a, b) => a + b, 0);
+
+    // Solo actualizar gráficos si existen
+    if (presupuesto.chartEjecucion) {
+        presupuesto.chartEjecucion.data.datasets[0].data = [
+            presupuesto.indicadores.ejecucionIngresos,
+            presupuesto.indicadores.ejecucionGastos
+        ];
+        presupuesto.chartEjecucion.update();
+    }
+
+    if (presupuesto.chartComposicionGastos) {
+        const funcionamiento = Object.entries(presupuesto.actualizado.gastos)
+            .filter(([key]) => key.includes('Servicios') || key.includes('Honorarios') || key.includes('Gastos Generales') || key.includes('Pensiones'))
+            .reduce((sum, [, value]) => sum + value, 0);
+            
+        const inversion = Object.entries(presupuesto.actualizado.gastos)
+            .filter(([key]) => key.includes('Proyecto') || key.includes('Cobertura'))
+            .reduce((sum, [, value]) => sum + value, 0);
+            
+        const otros = gastos2026 - funcionamiento - inversion;
+        
+        presupuesto.chartComposicionGastos.data.datasets[0].data = [
+            funcionamiento,
+            inversion,
+            0, // Deuda (no hay en el ejemplo)
+            otros
+        ];
+        presupuesto.chartComposicionGastos.update();
+    }
+
+    if (presupuesto.chartComparativo) {
+        presupuesto.chartComparativo.data.datasets[0].data = [ingresos2025, ingresos2026];
+        presupuesto.chartComparativo.data.datasets[1].data = [gastos2025, gastos2026];
+        presupuesto.chartComparativo.update();
+    }
+
+    if (presupuesto.chartTopConceptos) {
+        const topGastos = Object.entries(presupuesto.actualizado.gastos)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        presupuesto.chartTopConceptos.data.labels = topGastos.map(([k]) => k);
+        presupuesto.chartTopConceptos.data.datasets[0].data = topGastos.map(([, v]) => v);
+        presupuesto.chartTopConceptos.update();
+    }
+
+    // Resto del código para el resumen estadístico...
 }
+
+
 
 // Funciones para análisis
 function actualizarResumenIndicadores() {
@@ -1065,5 +1133,278 @@ document.getElementById('agregar-gasto').addEventListener('click', function () {
     document.getElementById(`base-gasto-${id}`).addEventListener('input', calcularProyeccion);
     document.getElementById(`crec-gasto-${id}`).addEventListener('input', calcularProyeccion);
 });
+
+function generarPDF() {
+    // Mostrar mensaje de carga
+    mostrarMensaje("Generando PDF, por favor espere...", "info");
+    
+    // Crear un nuevo documento PDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+    
+    // Configuración general del PDF
+    const margin = 20;
+    let yPos = margin;
+    const pageWidth = doc.internal.pageSize.getWidth() - 2 * margin;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    
+    // Título del reporte
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Reporte de Análisis Presupuestal Municipal', pageWidth / 2 + margin, yPos + 20, { align: 'center' });
+    
+    // Fecha de generación
+    doc.setFontSize(10);
+    doc.text(`Generado el: ${new Date().toLocaleDateString('es-CO', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    })}`, margin, yPos + 40);
+    yPos += 60;
+    
+    // Función para agregar una nueva página si es necesario
+    const checkPageBreak = (heightNeeded) => {
+        if (yPos + heightNeeded > pageHeight - margin) {
+            doc.addPage();
+            yPos = margin;
+        }
+    };
+    
+    // Función auxiliar para obtener instancia de Chart.js por ID de canvas
+    const obtenerChartPorId = (canvasId) => {
+        const chartMapping = {
+            'ejecucionChart': presupuesto.chartEjecucion,
+            'composicionGastosChart': presupuesto.chartComposicionGastos,
+            'comparativoLineChart': presupuesto.chartComparativo,
+            'topConceptosChart': presupuesto.chartTopConceptos
+        };
+        return chartMapping[canvasId];
+    };
+    
+    // Función mejorada para capturar gráficos
+    const capturarGraficoComoImagen = async (chartInstance, width = 800) => {
+        return new Promise((resolve) => {
+            // Crear un canvas temporal con alta resolución
+            const tempCanvas = document.createElement('canvas');
+            const scaleFactor = 2; // Aumentar para mejor calidad
+            tempCanvas.width = width * scaleFactor;
+            tempCanvas.height = (chartInstance.height * width * scaleFactor) / chartInstance.width;
+            
+            // Configurar contexto
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Dibujar el gráfico
+            tempCtx.drawImage(chartInstance.canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Convertir a imagen
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.src = tempCanvas.toDataURL('image/png', 1.0);
+        });
+    };
+    
+    // Función para agregar gráficos al PDF
+    const agregarGraficoAPDF = async (elementId, titulo) => {
+        checkPageBreak(300);
+        
+        // Agregar título del gráfico
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text(titulo, margin, yPos);
+        yPos += 20;
+        
+        try {
+            // Intentar obtener el gráfico de Chart.js
+            const chart = obtenerChartPorId(elementId);
+            if (chart) {
+                // Capturar como imagen de alta calidad
+                const img = await capturarGraficoComoImagen(chart, pageWidth);
+                const imgHeight = (img.height * pageWidth) / img.width;
+                
+                // Asegurar que cabe en la página
+                if (yPos + imgHeight > pageHeight - margin) {
+                    doc.addPage();
+                    yPos = margin;
+                }
+                
+                doc.addImage(img.src, 'PNG', margin, yPos, pageWidth, imgHeight);
+                yPos += imgHeight + 20;
+                return;
+            }
+            
+            // Fallback para elementos que no son gráficos de Chart.js
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            await new Promise(resolve => setTimeout(resolve, 300)); // Pequeña pausa
+            
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                backgroundColor: '#FFFFFF',
+                allowTaint: true
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const imgHeight = (canvas.height * pageWidth) / canvas.width;
+            
+            doc.addImage(imgData, 'PNG', margin, yPos, pageWidth, imgHeight);
+            yPos += imgHeight + 20;
+        } catch (error) {
+            console.error(`Error al capturar ${titulo}:`, error);
+            agregarTextoAPDF(`[No se pudo cargar el gráfico: ${titulo}]`, 10);
+        }
+    };
+    
+    // Función para agregar tablas al PDF
+    const agregarTablaAPDF = (elementId, titulo) => {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        checkPageBreak(300);
+        
+        // Agregar título de la tabla
+        doc.setFontSize(14);
+        doc.text(titulo, margin, yPos);
+        yPos += 20;
+        
+        // Capturar datos de la tabla
+        const rows = element.querySelectorAll('tr');
+        if (rows.length === 0) return;
+        
+        const headers = Array.from(rows[0].querySelectorAll('th')).map(th => th.textContent.trim());
+        const data = [];
+        
+        for (let i = 1; i < rows.length; i++) {
+            data.push(Array.from(rows[i].querySelectorAll('td')).map(td => td.textContent.trim()));
+        }
+        
+        // Configurar estilo de la tabla
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        
+        // Configurar autoTable
+        doc.autoTable({
+            startY: yPos,
+            head: [headers],
+            body: data,
+            margin: { left: margin },
+            styles: {
+                fontSize: 8,
+                cellPadding: 4,
+                overflow: 'linebreak'
+            },
+            headStyles: {
+                fillColor: [44, 62, 80],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [240, 240, 240]
+            }
+        });
+        
+        yPos = doc.lastAutoTable.finalY + 20;
+    };
+    
+    // Función para agregar texto al PDF
+    const agregarTextoAPDF = (texto, fontSize = 12, isBold = false, align = 'left') => {
+        checkPageBreak(fontSize * 5); // Estimación de espacio necesario
+        
+        doc.setFontSize(fontSize);
+        doc.setFont(isBold ? 'helvetica-bold' : 'helvetica');
+        doc.text(texto, margin, yPos, { align, maxWidth: pageWidth });
+        
+        yPos += fontSize * (doc.splitTextToSize(texto, pageWidth).length * 1.2);
+    };
+    
+    // Proceso de generación del PDF (usando async/await)
+    (async () => {
+        try {
+            // 1. Portada y resumen ejecutivo
+            doc.setFillColor(240, 240, 240);
+            doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), 'F');
+            
+            doc.setFontSize(22);
+            doc.setTextColor(44, 62, 80);
+            doc.text('ANÁLISIS PRESUPUESTAL', pageWidth / 2 + margin, 120, { align: 'center' });
+            doc.text('MUNICIPAL', pageWidth / 2 + margin, 160, { align: 'center' });
+            
+            doc.setFontSize(16);
+            doc.text(`Período: 2025 - 2026`, pageWidth / 2 + margin, 220, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(`Generado por: ${document.querySelector('footer p:nth-child(2)').textContent.replace('Desarrollada por: ', '')}`, 
+                    pageWidth / 2 + margin, 260, { align: 'center' });
+            
+            doc.addPage();
+            yPos = margin;
+            
+            // 2. Resumen ejecutivo
+            agregarTextoAPDF('RESUMEN EJECUTIVO', 16, true);
+            agregarTextoAPDF('Este documento presenta un análisis completo del presupuesto municipal, incluyendo proyecciones, ejecución y modificaciones realizadas durante el período fiscal.', 10);
+            
+            // Datos clave
+            const totalIngresos = parseFloat(document.getElementById('total-ingresos-2026').textContent.replace(/\./g, '')) || 0;
+            const totalGastos = parseFloat(document.getElementById('total-gastos-2026').textContent.replace(/\./g, '')) || 0;
+            const diferencia = totalIngresos - totalGastos;
+            
+            agregarTextoAPDF('DATOS CLAVE:', 12, true);
+            agregarTextoAPDF(`• Total Ingresos 2026: $${formatNumber(totalIngresos)}`);
+            agregarTextoAPDF(`• Total Gastos 2026: $${formatNumber(totalGastos)}`);
+            agregarTextoAPDF(`• Resultado: ${diferencia >= 0 ? 'Superávit' : 'Déficit'} de $${formatNumber(Math.abs(diferencia))}`);
+            
+            // 3. Gráficos principales (con pausas entre ellos)
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await agregarGraficoAPDF('ejecucionChart', 'Gráfico 1: Ejecución de Ingresos vs Gastos');
+            
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await agregarGraficoAPDF('composicionGastosChart', 'Gráfico 2: Composición de Gastos');
+            
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await agregarGraficoAPDF('comparativoLineChart', 'Gráfico 3: Comparativo 2025 vs 2026');
+            
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await agregarGraficoAPDF('topConceptosChart', 'Gráfico 4: Top 5 Conceptos de Gasto');
+            
+            // 4. Tablas de datos
+            agregarTablaAPDF('indicadores-table', 'Tabla 1: Indicadores Presupuestales');
+            agregarTablaAPDF('modificaciones-table', 'Tabla 2: Historial de Modificaciones');
+            
+            // 5. Análisis cualitativo
+            agregarTextoAPDF('ANÁLISIS CUALITATIVO', 16, true);
+            const analisisText = document.getElementById('analisis-texto').value || 'No se ha ingresado análisis cualitativo.';
+            doc.setFontSize(11);
+            doc.text(analisisText, margin, yPos, { maxWidth: pageWidth });
+            
+            // 6. Pie de página
+            doc.addPage();
+            yPos = margin;
+            agregarTextoAPDF('CONCLUSIONES Y RECOMENDACIONES', 16, true, 'center');
+            agregarTextoAPDF(' ', 12);
+            
+            const recomendaciones = document.getElementById('recomendaciones')?.textContent || 
+                                  'No se generaron recomendaciones automáticas.';
+            doc.setFontSize(11);
+            doc.text(recomendaciones, margin, yPos, { maxWidth: pageWidth });
+            
+            // Guardar el PDF
+            doc.save(`Analisis_Presupuestal_${new Date().toISOString().split('T')[0]}.pdf`);
+            
+            mostrarMensaje("PDF generado con éxito", "success");
+        } catch (error) {
+            console.error("Error al generar PDF:", error);
+            mostrarMensaje("Error al generar PDF: " + error.message, "danger");
+        }
+    })();
+}
+
+// Agregar evento al botón de generar PDF
+document.getElementById('generar-pdf')?.addEventListener('click', generarPDF);
 
 
