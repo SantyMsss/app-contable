@@ -62,9 +62,9 @@
                         </tr>
                         <tr>
                             <td>Tasa por Ocupación de Vías (Nuevo)</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><input type="number" id="tasa-vias" value="10000"></td>
+                            <td><input type="number" id="tasa-vias-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-tasa-vias" value="0"></td>
+                            <td><span id="tasa-vias-2026" class="calculated">0</span></td>
                         </tr>
                         
                         <!-- Ingresos No Tributarios -->
@@ -91,13 +91,15 @@
                         <tr>
                             <td>SGP - Propósito General</td>
                             <td><input type="number" id="sgp-2024" class="base-input" value="0"></td>
-                            <td><span id="crec-sgp">13</span>% (Inflación 2025 + 4)</td>
+                            <td>
+                                <input type="number" id="crec-sgp-input" value="13" class="tasa-crecimiento-input">
+                            </td>
                             <td><span id="sgp-2026" class="calculated">0</span></td>
                         </tr>
                         <tr>
                             <td>FONPET</td>
                             <td><input type="number" id="fonpet-2023" class="base-input" value="0"></td>
-                            <td>20%</td>
+                            <td><input type="number" id="crec-fonpet" value="20"></td>
                             <td><span id="fonpet-2026" class="calculated">0</span></td>
                         </tr>
                         
@@ -107,21 +109,23 @@
                         </tr>
                         <tr>
                             <td>Crédito FINDETER EXTERNO</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><input type="number" id="credito-findeter" value="20000"></td>
+                            <td><input type="number" id="credito-findeter-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-credito-findeter" value="0"></td>
+                            <td><span id="credito-findeter-2026" class="calculated">0</span></td>
                         </tr>
+
                         <tr>
                             <td>Crédito ENTerritorio</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><input type="number" id="credito-enterritorio" value="20000"></td>
+                            <td><input type="number" id="credito-enterritorio-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-credito-enterritorio" value="0"></td>
+                            <td><span id="credito-enterritorio-2026" class="calculated">0</span></td>
                         </tr>
+
                         <tr>
                             <td>Donación Gobierno Alemán</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><input type="number" id="donacion-alemana" value="48000"></td>
+                            <td><input type="number" id="donacion-alemana-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-donacion-alemana" value="0"></td>
+                            <td><span id="donacion-alemana-2026" class="calculated">0</span></td>
                         </tr>
 
                         <tr>
@@ -164,10 +168,10 @@
                             <td><span id="serv-personales-2026" class="calculated">0</span></td>
                         </tr>
                         <tr>
-                            <td>Honorarios Concejales (15% Predial)</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><span id="honorarios-concejales" class="calculated">0</span></td>
+                            <td>Honorarios Concejales</td>
+                            <td><input type="number" id="honorarios-concejales-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-honorarios-concejales" value="0"></td>
+                            <td><span id="honorarios-concejales-2026" class="calculated">0</span></td>
                         </tr>
                         <tr>
                             <td>Gastos Generales</td>
@@ -177,18 +181,19 @@
                         </tr>
                         <tr>
                             <td>Sistematización</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><input type="number" id="sistematizacion" value="594"></td>
+                            <td><input type="number" id="sistematizacion-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-sistematizacion" value="0"></td>
+                            <td><span id="sistematizacion-2026" class="calculated">0</span></td>
                         </tr>
                         
                         <!-- Contribuciones Nómina -->
                         <tr>
-                            <td>Contribuciones Nómina (Calculadas)</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><span id="contribuciones-nomina" class="calculated">0</span></td>
+                            <td>Contribuciones Nómina</td>
+                            <td><input type="number" id="contribuciones-nomina-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-contribuciones-nomina" value="0"></td>
+                            <td><span id="contribuciones-nomina-2026" class="calculated">0</span></td>
                         </tr>
+
                         
                         <!-- Transferencias -->
                         <tr class="category">
@@ -196,27 +201,30 @@
                         </tr>
                         <tr>
                             <td>Fondo Local Deporte y Cultura</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><span id="fondo-deporte-cultura" class="calculated">0</span></td>
+                            <td><input type="number" id="fondo-deporte-cultura-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-fondo-deporte-cultura" value="0"></td>
+                            <td><span id="fondo-deporte-cultura-2026" class="calculated">0</span></td>
                         </tr>
+
                         <tr>
                             <td>Fondo Local de Salud</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><span id="fondo-salud" class="calculated">0</span></td>
+                            <td><input type="number" id="fondo-salud-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-fondo-salud" value="0"></td>
+                            <td><span id="fondo-salud-2026" class="calculated">0</span></td>
                         </tr>
+
                         <tr>
-                            <td>Concejo Municipal (60 smmlv)</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><span id="concejo-municipal" class="calculated">0</span></td>
+                            <td>Concejo Municipal</td>
+                            <td><input type="number" id="concejo-municipal-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-concejo-municipal" value="0"></td>
+                            <td><span id="concejo-municipal-2026" class="calculated">0</span></td>
                         </tr>
+
                         <tr>
-                            <td>Personería Municipal (190 smmlv)</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><span id="personeria-municipal" class="calculated">0</span></td>
+                            <td>Personería Municipal</td>
+                            <td><input type="number" id="personeria-municipal-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-personeria-municipal" value="0"></td>
+                            <td><span id="personeria-municipal-2026" class="calculated">0</span></td>
                         </tr>
                         
                         <!-- Gastos de Inversión -->
@@ -249,9 +257,9 @@
                         </tr>
                         <tr>
                             <td>Cobertura Salud</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><input type="number" id="cobertura-salud" value="170000"></td>
+                            <td><input type="number" id="cobertura-salud-2025" class="base-input" value="0"></td>
+                            <td><input type="number" id="crec-cobertura-salud" value="0"></td>
+                            <td><span id="cobertura-salud-2026" class="calculated">0</span></td>
                         </tr>
 
                         <tr>
@@ -317,6 +325,17 @@
                 <label for="valor-modificacion">Valor (millones):</label>
                 <input type="number" id="valor-modificacion" class="form-control" min="0">
             </div>
+
+            <div class="form-group" id="distribucion-gasto" style="display: none;">
+                <label>Distribución del Valor (Debe sumar exactamente el valor ingresado):</label>
+                <div id="distribucion-contenedor"></div>
+                <div style="margin-top: 10px;">
+                    <button type="button" id="agregar-distribucion" class="btn-secundario">+ Añadir línea</button>
+                    <button type="button" id="guardar-distribucion" class="btn-principal">Registrar distribución</button>
+                </div>
+            </div>
+
+
             
             <div class="form-group">
                 <label for="justificacion-modificacion">Justificación:</label>

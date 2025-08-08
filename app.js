@@ -202,8 +202,9 @@ function calcularProyeccion() {
 }
 
 function calcularIngresos() {
+    presupuesto.proyeccion.ingresos = {};
+    
     // Ingresos Tributarios
-    presupuesto.proyeccion.ingresos = {}; // Limpiar ingresos antes de recalcular
     const predial2025 = parseFloat(document.getElementById('predial-2025').value) || 0;
     const crecimientoPredial = parseFloat(document.getElementById('crec-predial').value) || 0;
     const predial2026 = predial2025 * (1 + crecimientoPredial / 100);
@@ -216,8 +217,11 @@ function calcularIngresos() {
     document.getElementById('industria-2026').textContent = formatNumber(industria2026);
     presupuesto.proyeccion.ingresos['Impuesto Industria y Comercio'] = industria2026;
     
-    const tasaVias = parseFloat(document.getElementById('tasa-vias').value) || 0;
-    presupuesto.proyeccion.ingresos['Tasa por Ocupación de Vías'] = tasaVias;
+    const tasaVias2025 = parseFloat(document.getElementById('tasa-vias-2025').value) || 0;
+    const crecTasaVias = parseFloat(document.getElementById('crec-tasa-vias').value) || 0;
+    const tasaVias2026 = tasaVias2025 * (1 + crecTasaVias / 100);
+    document.getElementById('tasa-vias-2026').textContent = formatNumber(tasaVias2026);
+    presupuesto.proyeccion.ingresos['Tasa por Ocupación de Vías'] = tasaVias2026;
     
     // Ingresos No Tributarios
     const venta2025 = parseFloat(document.getElementById('venta-2025').value) || 0;
@@ -234,29 +238,38 @@ function calcularIngresos() {
     
     // Transferencias
     const sgp2024 = parseFloat(document.getElementById('sgp-2024').value) || 0;
-    const crecimientoSGP = TASA_INFLACION_2025 + 4; // Inflación 2025 + 4
-    document.getElementById('crec-sgp').textContent = crecimientoSGP;
+    const crecimientoSGP = parseFloat(document.getElementById('crec-sgp-input').value) || (TASA_INFLACION_2025 + 4);
     const sgp2026 = sgp2024 * (1 + crecimientoSGP / 100);
     document.getElementById('sgp-2026').textContent = formatNumber(sgp2026);
     presupuesto.proyeccion.ingresos['SGP - Propósito General'] = sgp2026;
     
     const fonpet2023 = parseFloat(document.getElementById('fonpet-2023').value) || 0;
-    const fonpet2026 = fonpet2023 * 1.20; // Crecimiento del 20%
+    const crecFonpet = parseFloat(document.getElementById('crec-fonpet').value) || 20;
+    const fonpet2026 = fonpet2023 * (1 + crecFonpet / 100);
     document.getElementById('fonpet-2026').textContent = formatNumber(fonpet2026);
     presupuesto.proyeccion.ingresos['FONPET'] = fonpet2026;
     
     // Recursos de Capital
-    const creditoFindeter = parseFloat(document.getElementById('credito-findeter').value) || 0;
-    presupuesto.proyeccion.ingresos['Crédito FINDETER EXTERNO'] = creditoFindeter;
+    const creditoFindeter2025 = parseFloat(document.getElementById('credito-findeter-2025').value) || 0;
+    const crecCreditoFindeter = parseFloat(document.getElementById('crec-credito-findeter').value) || 0;
+    const creditoFindeter2026 = creditoFindeter2025 * (1 + crecCreditoFindeter / 100);
+    document.getElementById('credito-findeter-2026').textContent = formatNumber(creditoFindeter2026);
+    presupuesto.proyeccion.ingresos['Crédito FINDETER EXTERNO'] = creditoFindeter2026;
     
-    const creditoEnterritorio = parseFloat(document.getElementById('credito-enterritorio').value) || 0;
-    presupuesto.proyeccion.ingresos['Crédito ENTerritorio'] = creditoEnterritorio;
+    const creditoEnterritorio2025 = parseFloat(document.getElementById('credito-enterritorio-2025').value) || 0;
+    const crecCreditoEnterritorio = parseFloat(document.getElementById('crec-credito-enterritorio').value) || 0;
+    const creditoEnterritorio2026 = creditoEnterritorio2025 * (1 + crecCreditoEnterritorio / 100);
+    document.getElementById('credito-enterritorio-2026').textContent = formatNumber(creditoEnterritorio2026);
+    presupuesto.proyeccion.ingresos['Crédito ENTerritorio'] = creditoEnterritorio2026;
     
-    const donacionAlemana = parseFloat(document.getElementById('donacion-alemana').value) || 0;
-    presupuesto.proyeccion.ingresos['Donación Gobierno Alemán'] = donacionAlemana;
+    const donacionAlemana2025 = parseFloat(document.getElementById('donacion-alemana-2025').value) || 0;
+    const crecDonacionAlemana = parseFloat(document.getElementById('crec-donacion-alemana').value) || 0;
+    const donacionAlemana2026 = donacionAlemana2025 * (1 + crecDonacionAlemana / 100);
+    document.getElementById('donacion-alemana-2026').textContent = formatNumber(donacionAlemana2026);
+    presupuesto.proyeccion.ingresos['Donación Gobierno Alemán'] = donacionAlemana2026;
     
-   let totalBaseDinamicoIngresos = 0;
-
+    // Ingresos dinámicos agregados por el usuario
+    let totalBaseDinamicoIngresos = 0;
     document.querySelectorAll('[id^="concepto-ingreso-"]').forEach(input => {
         const id = input.id.split('-')[2];
         const concepto = input.value.trim() || `Ingreso ${id}`;
@@ -268,66 +281,71 @@ function calcularIngresos() {
         totalBaseDinamicoIngresos += base;
     });
 
-    // Sumar al total base
-    const totalIngresos2025 = predial2025 + industria2025 + venta2025 + otrosNoTrib2025 + sgp2024 + fonpet2023 + totalBaseDinamicoIngresos;
+    // Calcular total ingresos 2025
+    const totalIngresos2025 = predial2025 + industria2025 + tasaVias2025 + venta2025 + otrosNoTrib2025 + 
+                             sgp2024 + fonpet2023 + creditoFindeter2025 + creditoEnterritorio2025 + 
+                             donacionAlemana2025 + totalBaseDinamicoIngresos;
     document.getElementById('total-ingresos-2025').textContent = formatNumber(totalIngresos2025);
-
-    }
+}
 
 function calcularGastos() {
+    presupuesto.proyeccion.gastos = {};
+    
     // Gastos de Funcionamiento
-
-    presupuesto.proyeccion.gastos = {}; // Limpiar gastos antes de recalcular
     const servPersonales2025 = parseFloat(document.getElementById('serv-personales-2025').value) || 0;
     const crecServPersonales = parseFloat(document.getElementById('crec-serv-personales').value) || 0;
     const servPersonales2026 = servPersonales2025 * (1 + Math.min(crecServPersonales, 14) / 100);
     document.getElementById('serv-personales-2026').textContent = formatNumber(servPersonales2026);
     presupuesto.proyeccion.gastos['Servicios Personales'] = servPersonales2026;
     
-    // Honorarios Concejales (15% del Impuesto Predial)
-    const predial2026 = parseFloat(document.getElementById('predial-2026').textContent.replace(/\./g, '')) || 0;
-    const honorariosConcejales = predial2026 * 0.15;
-    document.getElementById('honorarios-concejales').textContent = formatNumber(honorariosConcejales);
-    presupuesto.proyeccion.gastos['Honorarios Concejales'] = honorariosConcejales;
+    const honorarios2025 = parseFloat(document.getElementById('honorarios-concejales-2025').value) || 0;
+    const crecHonorarios = parseFloat(document.getElementById('crec-honorarios-concejales').value) || 0;
+    const honorarios2026 = honorarios2025 * (1 + crecHonorarios / 100);
+    document.getElementById('honorarios-concejales-2026').textContent = formatNumber(honorarios2026);
+    presupuesto.proyeccion.gastos['Honorarios Concejales'] = honorarios2026;
     
-    // Gastos Generales
     const gastosGenerales2025 = parseFloat(document.getElementById('gastos-generales-2025').value) || 0;
     const crecGastosGenerales = parseFloat(document.getElementById('crec-gastos-generales').value) || 0;
     const gastosGenerales2026 = gastosGenerales2025 * (1 + crecGastosGenerales / 100);
     document.getElementById('gastos-generales-2026').textContent = formatNumber(gastosGenerales2026);
     presupuesto.proyeccion.gastos['Gastos Generales'] = gastosGenerales2026;
     
-    // Sistematización
-    const sistematizacion = parseFloat(document.getElementById('sistematizacion').value) || 0;
-    presupuesto.proyeccion.gastos['Sistematización'] = sistematizacion;
+    const sistematizacion2025 = parseFloat(document.getElementById('sistematizacion-2025').value) || 0;
+    const crecSistematizacion = parseFloat(document.getElementById('crec-sistematizacion').value) || 0;
+    const sistematizacion2026 = sistematizacion2025 * (1 + crecSistematizacion / 100);
+    document.getElementById('sistematizacion-2026').textContent = formatNumber(sistematizacion2026);
+    presupuesto.proyeccion.gastos['Sistematización'] = sistematizacion2026;
     
-    // Contribuciones Nómina (12% Pensiones, 9% Cesantías, etc.)
-    const baseContribuciones = servPersonales2026 + 12270; // + 12.270 millones
-    const contribuciones = {
-        'Pensiones': baseContribuciones * 0.12,
-        'Cesantías': baseContribuciones * 0.09,
-        'EPS': baseContribuciones * 0.085,
-        'Caja de Compensación': baseContribuciones * 0.04,
-        'ESAP, Escuelas industriales': baseContribuciones * 0.01,
-        'ARL': baseContribuciones * 0.037
-    };
-    
-    let totalContribuciones = 0;
-    for (const [key, value] of Object.entries(contribuciones)) {
-        totalContribuciones += value;
-        presupuesto.proyeccion.gastos[key] = value;
-    }
-    
-    document.getElementById('contribuciones-nomina').textContent = formatNumber(totalContribuciones);
+    const contribuciones2025 = parseFloat(document.getElementById('contribuciones-nomina-2025').value) || 0;
+    const crecContribuciones = parseFloat(document.getElementById('crec-contribuciones-nomina').value) || 0;
+    const contribuciones2026 = contribuciones2025 * (1 + crecContribuciones / 100);
+    document.getElementById('contribuciones-nomina-2026').textContent = formatNumber(contribuciones2026);
+    presupuesto.proyeccion.gastos['Contribuciones Nómina'] = contribuciones2026;
     
     // Transferencias
-    const concejoMunicipal = 60 * SMMLV_2022;
-    document.getElementById('concejo-municipal').textContent = formatNumber(concejoMunicipal);
-    presupuesto.proyeccion.gastos['Concejo Municipal'] = concejoMunicipal;
+    const fondoDeporte2025 = parseFloat(document.getElementById('fondo-deporte-cultura-2025').value) || 0;
+    const crecFondoDeporte = parseFloat(document.getElementById('crec-fondo-deporte-cultura').value) || 0;
+    const fondoDeporte2026 = fondoDeporte2025 * (1 + crecFondoDeporte / 100);
+    document.getElementById('fondo-deporte-cultura-2026').textContent = formatNumber(fondoDeporte2026);
+    presupuesto.proyeccion.gastos['Fondo Local Deporte y Cultura'] = fondoDeporte2026;
     
-    const personeriaMunicipal = 190 * SMMLV_2022;
-    document.getElementById('personeria-municipal').textContent = formatNumber(personeriaMunicipal);
-    presupuesto.proyeccion.gastos['Personería Municipal'] = personeriaMunicipal;
+    const fondoSalud2025 = parseFloat(document.getElementById('fondo-salud-2025').value) || 0;
+    const crecFondoSalud = parseFloat(document.getElementById('crec-fondo-salud').value) || 0;
+    const fondoSalud2026 = fondoSalud2025 * (1 + crecFondoSalud / 100);
+    document.getElementById('fondo-salud-2026').textContent = formatNumber(fondoSalud2026);
+    presupuesto.proyeccion.gastos['Fondo Local de Salud'] = fondoSalud2026;
+    
+    const concejo2025 = parseFloat(document.getElementById('concejo-municipal-2025').value) || 0;
+    const crecConcejo = parseFloat(document.getElementById('crec-concejo-municipal').value) || 0;
+    const concejo2026 = concejo2025 * (1 + crecConcejo / 100);
+    document.getElementById('concejo-municipal-2026').textContent = formatNumber(concejo2026);
+    presupuesto.proyeccion.gastos['Concejo Municipal'] = concejo2026;
+    
+    const personeria2025 = parseFloat(document.getElementById('personeria-municipal-2025').value) || 0;
+    const crecPersoneria = parseFloat(document.getElementById('crec-personeria-municipal').value) || 0;
+    const personeria2026 = personeria2025 * (1 + crecPersoneria / 100);
+    document.getElementById('personeria-municipal-2026').textContent = formatNumber(personeria2026);
+    presupuesto.proyeccion.gastos['Personería Municipal'] = personeria2026;
     
     // Gastos de Inversión
     const proyecto1_2025 = parseFloat(document.getElementById('proyecto1-2025').value) || 0;
@@ -354,11 +372,14 @@ function calcularGastos() {
     document.getElementById('proyecto4-2026').textContent = formatNumber(proyecto4_2026);
     presupuesto.proyeccion.gastos['Proyecto 4'] = proyecto4_2026;
     
-    const coberturaSalud = parseFloat(document.getElementById('cobertura-salud').value) || 0;
-    presupuesto.proyeccion.gastos['Cobertura Salud'] = coberturaSalud;
+    const cobertura2025 = parseFloat(document.getElementById('cobertura-salud-2025').value) || 0;
+    const crecCobertura = parseFloat(document.getElementById('crec-cobertura-salud').value) || 0;
+    const cobertura2026 = cobertura2025 * (1 + crecCobertura / 100);
+    document.getElementById('cobertura-salud-2026').textContent = formatNumber(cobertura2026);
+    presupuesto.proyeccion.gastos['Cobertura Salud'] = cobertura2026;
     
+    // Gastos dinámicos agregados por el usuario
     let totalBaseDinamicoGastos = 0;
-
     document.querySelectorAll('[id^="concepto-gasto-"]').forEach(input => {
         const id = input.id.split('-')[2];
         const concepto = input.value.trim() || `Gasto ${id}`;
@@ -370,11 +391,12 @@ function calcularGastos() {
         totalBaseDinamicoGastos += base;
     });
 
-    // Sumar al total base
-    const totalGastos2025 = servPersonales2025 + gastosGenerales2025 + proyecto1_2025 + proyecto2_2025 + proyecto3_2025 + proyecto4_2025 + totalBaseDinamicoGastos;
+    // Calcular total gastos 2025
+    const totalGastos2025 = servPersonales2025 + honorarios2025 + gastosGenerales2025 + sistematizacion2025 + 
+                           contribuciones2025 + fondoDeporte2025 + fondoSalud2025 + concejo2025 + 
+                           personeria2025 + proyecto1_2025 + proyecto2_2025 + proyecto3_2025 + 
+                           proyecto4_2025 + cobertura2025 + totalBaseDinamicoGastos;
     document.getElementById('total-gastos-2025').textContent = formatNumber(totalGastos2025);
-
-
 }
 
 function actualizarTotales() {
@@ -474,6 +496,86 @@ if (tipo === 'reduccion' || tipo === 'traslado') {
     document.getElementById('justificacion-modificacion').value = '';
     
     mostrarMensaje('Modificación agregada correctamente', 'success');
+
+        if (tipo === 'adicion') {
+        mostrarDistribucion(valor, area);
+    }
+
+        function mostrarDistribucion(valor, areaOrigen) {
+        const contenedor = document.getElementById('distribucion-contenedor');
+        const seccion = document.getElementById('distribucion-gasto');
+        contenedor.innerHTML = '';
+        seccion.style.display = 'block';
+        seccion.setAttribute('data-valor-total', valor);
+        seccion.setAttribute('data-area-origen', areaOrigen);
+
+        const conceptos = Object.keys(presupuesto.proyeccion.gastos); // por defecto: distribuir a gastos
+        agregarFilaDistribucion(conceptos);
+    }
+
+    function agregarFilaDistribucion(conceptos) {
+        const contenedor = document.getElementById('distribucion-contenedor');
+        const fila = document.createElement('div');
+        fila.classList.add('fila-distribucion');
+
+        fila.innerHTML = `
+            <select class="concepto-distribucion">
+                ${conceptos.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+            <input type="number" class="valor-distribucion" min="0" placeholder="Valor (millones)">
+            <button type="button" class="btn-eliminar-fila-distribucion">X</button>
+        `;
+
+        contenedor.appendChild(fila);
+    }
+
+        document.getElementById('agregar-distribucion').addEventListener('click', () => {
+        const conceptos = Object.keys(presupuesto.proyeccion.gastos);
+        agregarFilaDistribucion(conceptos);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-eliminar-fila-distribucion')) {
+            e.target.parentElement.remove();
+        }
+    });
+
+    document.getElementById('guardar-distribucion').addEventListener('click', () => {
+    const totalEsperado = parseFloat(document.getElementById('distribucion-gasto').getAttribute('data-valor-total'));
+    const areaOrigen = document.getElementById('distribucion-gasto').getAttribute('data-area-origen');
+    const filas = document.querySelectorAll('.fila-distribucion');
+
+    let sumaDistribucion = 0;
+    const distribuciones = [];
+
+    filas.forEach(fila => {
+        const concepto = fila.querySelector('.concepto-distribucion').value;
+        const valor = parseFloat(fila.querySelector('.valor-distribucion').value) || 0;
+        sumaDistribucion += valor;
+        distribuciones.push({ concepto, valor });
+    });
+
+    if (sumaDistribucion !== totalEsperado) {
+        mostrarMensaje(`La suma de la distribución (${formatNumber(sumaDistribucion)}) debe ser igual al valor original (${formatNumber(totalEsperado)}).`, 'danger');
+        return;
+    }
+
+    // Aplicar al presupuesto actualizado
+    distribuciones.forEach(d => {
+        presupuesto.actualizado.gastos[d.concepto] = (presupuesto.actualizado.gastos[d.concepto] || 0) + d.valor;
+    });
+
+    actualizarPresupuestoActualizado();
+    mostrarMensaje('Distribución aplicada correctamente.', 'success');
+
+    // Limpiar UI
+    document.getElementById('distribucion-gasto').style.display = 'none';
+    document.getElementById('distribucion-contenedor').innerHTML = '';
+});
+
+
+
+
 }
 
 function aplicarModificacion(modificacion) {
@@ -977,9 +1079,7 @@ function importarDatos(event) {
 }
 
 function actualizarInterfazConDatos() {
-    // Actualizar tablas de proyección
-    document.getElementById('predial-2025').value = presupuesto.proyeccion.ingresos['Impuesto Predial'] / 1.502;
-    // ... (actualizar todos los campos de entrada)
+    // No necesitamos establecer valores en los spans ya que se calcularán automáticamente
     
     // Actualizar tablas de modificaciones
     actualizarTablaModificaciones();
@@ -992,8 +1092,10 @@ function actualizarInterfazConDatos() {
     
     // Actualizar análisis
     document.getElementById('analisis-texto').value = presupuesto.analisis || '';
+    
+    // Forzar recálculo de proyecciones
+    calcularProyeccion();
 }
-
 // Funciones auxiliares
 function formatNumber(num) {
     return new Intl.NumberFormat('es-CO').format(Math.round(num));
@@ -1014,41 +1116,69 @@ function mostrarMensaje(texto, tipo) {
 
 // Función para cargar datos de ejemplo (simulación)
 function cargarDatosEjemplo() {
-    // Datos de ejemplo para ingresos
+    // Ingresos
+    document.getElementById('crec-sgp-input').value = TASA_INFLACION_2025 + 4;
     document.getElementById('predial-2025').value = 50000;
     document.getElementById('industria-2025').value = 30000;
+    document.getElementById('tasa-vias-2025').value = 0;
+    document.getElementById('crec-tasa-vias').value = 0;
     document.getElementById('venta-2025').value = 10000;
     document.getElementById('otros-no-trib-2025').value = 5000;
     document.getElementById('sgp-2024').value = 80000;
     document.getElementById('fonpet-2023').value = 20000;
-    
-    // Datos de ejemplo para gastos
+    document.getElementById('credito-findeter-2025').value = 0;
+    document.getElementById('crec-credito-findeter').value = 0;
+    document.getElementById('credito-enterritorio-2025').value = 0;
+    document.getElementById('crec-credito-enterritorio').value = 0;
+    document.getElementById('donacion-alemana-2025').value = 0;
+    document.getElementById('crec-donacion-alemana').value = 0;
+
+    // Gastos
     document.getElementById('serv-personales-2025').value = 40000;
+    document.getElementById('honorarios-concejales-2025').value = 7500;
+    document.getElementById('crec-honorarios-concejales').value = 0;
     document.getElementById('gastos-generales-2025').value = 15000;
+    document.getElementById('sistematizacion-2025').value = 0;
+    document.getElementById('crec-sistematizacion').value = 0;
+    document.getElementById('contribuciones-nomina-2025').value = 12000;
+    document.getElementById('crec-contribuciones-nomina').value = 0;
+    document.getElementById('fondo-deporte-cultura-2025').value = 5000;
+    document.getElementById('crec-fondo-deporte-cultura').value = 0;
+    document.getElementById('fondo-salud-2025').value = 8000;
+    document.getElementById('crec-fondo-salud').value = 0;
+    document.getElementById('concejo-municipal-2025').value = 60000;
+    document.getElementById('crec-concejo-municipal').value = 0;
+    document.getElementById('personeria-municipal-2025').value = 190000;
+    document.getElementById('crec-personeria-municipal').value = 0;
     document.getElementById('proyecto1-2025').value = 20000;
     document.getElementById('proyecto2-2025').value = 15000;
     document.getElementById('proyecto3-2025').value = 10000;
     document.getElementById('proyecto4-2025').value = 5000;
-    document.getElementById('cobertura-salud').value = 10000;
-    
-    // Calcular proyección inicial con datos de ejemplo
+    document.getElementById('cobertura-salud-2025').value = 0;
+    document.getElementById('crec-cobertura-salud').value = 0;
+
+    // Calcular proyecciones con los datos de ejemplo
     calcularProyeccion();
-    
-    // Agregar algunas modificaciones de ejemplo
+
+    // Modificaciones de ejemplo
     const modificacionesEjemplo = [
         {
             tipo: 'adicion',
             area: 'ingresos',
             concepto: 'Impuesto Predial',
             valor: 2000,
-            justificacion: 'Ajuste por actualización catastral'
+            justificacion: 'Ajuste por actualización catastral',
+            id: Date.now() + 1,
+            fecha: new Date().toLocaleDateString()
         },
         {
             tipo: 'reduccion',
             area: 'gastos',
             concepto: 'Gastos Generales',
             valor: 1000,
-            justificacion: 'Optimización de contratos de servicios'
+            justificacion: 'Optimización de contratos de servicios',
+            id: Date.now() + 2,
+            fecha: new Date().toLocaleDateString()
         },
         {
             tipo: 'traslado',
@@ -1056,34 +1186,32 @@ function cargarDatosEjemplo() {
             concepto: 'Proyecto 1',
             conceptoDestino: 'Proyecto 3',
             valor: 3000,
-            justificacion: 'Reorientación de recursos a proyecto prioritario'
+            justificacion: 'Reorientación de recursos a proyecto prioritario',
+            id: Date.now() + 3,
+            fecha: new Date().toLocaleDateString()
         }
     ];
     
-    modificacionesEjemplo.forEach(mod => {
-        mod.id = Date.now() + Math.floor(Math.random() * 1000);
-        mod.fecha = new Date().toLocaleDateString();
-        presupuesto.modificaciones.push(mod);
-        aplicarModificacion(mod);
-    });
+    presupuesto.modificaciones = modificacionesEjemplo;
+    modificacionesEjemplo.forEach(mod => aplicarModificacion(mod));
     
-    // Actualizar interfaces
     actualizarTablaModificaciones();
     actualizarPresupuestoActualizado();
     
-    // Simular datos de ejecución (para indicadores)
-    presupuesto.ejecucion.ingresos = {};
-    presupuesto.ejecucion.gastos = {};
+    // Simular datos de ejecución
+    presupuesto.ejecucion = {
+        ingresos: {},
+        gastos: {}
+    };
     
     for (const [key, value] of Object.entries(presupuesto.actualizado.ingresos)) {
-        presupuesto.ejecucion.ingresos[key] = value * (0.7 + Math.random() * 0.3); // Entre 70% y 100%
+        presupuesto.ejecucion.ingresos[key] = value * (0.7 + Math.random() * 0.3);
     }
     
     for (const [key, value] of Object.entries(presupuesto.actualizado.gastos)) {
-        presupuesto.ejecucion.gastos[key] = value * (0.6 + Math.random() * 0.3); // Entre 60% y 90%
+        presupuesto.ejecucion.gastos[key] = value * (0.6 + Math.random() * 0.3);
     }
     
-    // Actualizar indicadores y gráficos
     actualizarGraficos();
 }
 

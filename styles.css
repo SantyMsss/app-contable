@@ -213,3 +213,44 @@ button#agregar-gasto {
 .btn-exportar:hover {
     background-color: #219653;
 }
+
+.btn-principal {
+    background-color: var(--success-color);
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: 4px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-secundario {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.fila-distribucion {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.fila-distribucion select,
+.fila-distribucion input {
+    flex: 1;
+}
+
+.fila-distribucion button {
+    background-color: var(--accent-color);
+    border: none;
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 3px;
+    cursor: pointer;
+}
