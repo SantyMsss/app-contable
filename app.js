@@ -1275,32 +1275,130 @@ function generarPDF() {
     let yPos = margin;
     const pageWidth = doc.internal.pageSize.getWidth() - 2 * margin;
     const pageHeight = doc.internal.pageSize.getHeight();
-    
-    // Título del reporte
-    doc.setFontSize(18);
-    doc.setTextColor(40, 40, 40);
-    doc.text('Reporte de Análisis Presupuestal Municipal', pageWidth / 2 + margin, yPos + 20, { align: 'center' });
-    
-    // Fecha de generación
-    doc.setFontSize(10);
-    doc.text(`Generado el: ${new Date().toLocaleDateString('es-CO', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })}`, margin, yPos + 40);
-    yPos += 60;
-    
-    // Función para agregar una nueva página si es necesario
+
+    // ========= utilidades =========
     const checkPageBreak = (heightNeeded) => {
         if (yPos + heightNeeded > pageHeight - margin) {
             doc.addPage();
             yPos = margin;
         }
     };
-    
-    // Función auxiliar para obtener instancia de Chart.js por ID de canvas
+
+    // Aux para formatear números sin romper si no existe formatNumber global
+    const fmt = (n) => {
+        const val = Number.isFinite(+n) ? +n : 0;
+        try {
+            return (typeof formatNumber === 'function')
+                ? formatNumber(val)
+                : new Intl.NumberFormat('es-CO').format(val);
+        } catch {
+            return String(val);
+        }
+    };
+
+    // ========= NUEVO: exportar Proyección (lee inputs y spans) =========
+    // ========= NUEVO: exportar Proyección (lee inputs, spans y también "nuevo ingreso/gasto") =========
+const exportarProyeccionAPDF = (tableId, titulo, totalBaseId, totalProjId, tipo) => {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    checkPageBreak(120);
+
+    // Título de sección
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text(titulo, margin, yPos);
+    yPos += 12;
+
+    const head = [['Concepto', '2025 (Base)', 'Tasa Crecimiento (%)', '2026 (Proyectado)']];
+    const body = [];
+    const rows = table.querySelectorAll('tbody tr');
+
+    rows.forEach(tr => {
+        // Saltar botones de añadir
+        if (tr.querySelector('button#agregar-ingreso') || tr.querySelector('button#agregar-gasto')) return;
+
+        if (tr.classList.contains('category')) {
+            const catText = tr.textContent.trim().replace(/\s+/g, ' ');
+            body.push({ concepto: catText, base: '', tasa: '', proj: '', _isGroup: true });
+            return;
+        }
+
+        if (tr.classList.contains('total')) return;
+
+        const tds = tr.querySelectorAll('td');
+        if (!tds.length) return;
+
+        const conceptoInput = tds[0]?.querySelector('input');
+        const concepto = conceptoInput ? conceptoInput.value.trim() : (tds[0]?.textContent || '').trim();
+
+        const baseInput = tds[1]?.querySelector('input');
+        const base = baseInput ? fmt(baseInput.value || 0) : fmt((tds[1]?.textContent || '0').replace(/\./g, ''));
+        const tasaInput = tds[2]?.querySelector('input');
+        const tasa = tasaInput ? (tasaInput.value || '0') : ((tds[2]?.textContent || '0').trim());
+        const projSpan = tds[3]?.querySelector('span');
+        const proyectado = projSpan ? projSpan.textContent.trim() : (tds[3]?.textContent.trim() || '0');
+
+        if (concepto || base || tasa || proyectado) {
+            body.push({ concepto, base, tasa, proj: proyectado });
+        }
+    });
+
+    // 🔹 Incluir los inputs de "nuevo ingreso" o "nuevo gasto"
+    if (tipo === 'ingreso') {
+        const conceptoNuevo = document.getElementById('nuevo-ingreso-nombre')?.value || '';
+        const baseNuevo = document.getElementById('nuevo-ingreso-base')?.value || '0';
+        const tasaNuevo = document.getElementById('nuevo-ingreso-tasa')?.value || '0';
+        const projNuevo = document.getElementById('nuevo-ingreso-proyectado')?.textContent || '0';
+        if (conceptoNuevo.trim() !== '') {
+            body.push({ concepto: conceptoNuevo, base: fmt(baseNuevo), tasa: tasaNuevo, proj: projNuevo });
+        }
+    } else if (tipo === 'gasto') {
+        const conceptoNuevo = document.getElementById('nuevo-gasto-nombre')?.value || '';
+        const baseNuevo = document.getElementById('nuevo-gasto-base')?.value || '0';
+        const tasaNuevo = document.getElementById('nuevo-gasto-tasa')?.value || '0';
+        const projNuevo = document.getElementById('nuevo-gasto-proyectado')?.textContent || '0';
+        if (conceptoNuevo.trim() !== '') {
+            body.push({ concepto: conceptoNuevo, base: fmt(baseNuevo), tasa: tasaNuevo, proj: projNuevo });
+        }
+    }
+
+    // Fila TOTAL
+    const totalBaseSpan = document.getElementById(totalBaseId);
+    const totalProjSpan = document.getElementById(totalProjId);
+    const totalBase = totalBaseSpan ? totalBaseSpan.textContent.trim() : '0';
+    const totalProj = totalProjSpan ? totalProjSpan.textContent.trim() : '0';
+    const etiquetaTotal = titulo.toLowerCase().includes('ingresos') ? 'TOTAL INGRESOS' : 'TOTAL GASTOS';
+    body.push({ concepto: etiquetaTotal, base: totalBase, tasa: '', proj: totalProj, _isTotal: true });
+
+    // Pintar tabla
+    doc.autoTable({
+        startY: yPos + 8,
+        head: head,
+        body: body.map(r => [r.concepto, r.base, r.tasa, r.proj]),
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 9, cellPadding: 4, overflow: 'linebreak' },
+        headStyles: { fillColor: [44, 62, 80], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        didParseCell: (data) => {
+            const meta = body[data.row.index];
+            if (meta?._isGroup) {
+                data.cell.styles.fillColor = [230, 230, 230];
+                data.cell.styles.fontStyle = 'bold';
+                if (data.column.index > 0) data.cell.text = '';
+            }
+            if (meta?._isTotal) {
+                data.cell.styles.fontStyle = 'bold';
+                if (data.column.index === 0) data.cell.styles.fillColor = [224, 224, 224];
+            }
+        }
+    });
+
+    yPos = doc.lastAutoTable.finalY + 20;
+};
+
+
+    // ========= funciones previas (se mantienen) =========
     const obtenerChartPorId = (canvasId) => {
         const chartMapping = {
             'ejecucionChart': presupuesto.chartEjecucion,
@@ -1310,77 +1408,51 @@ function generarPDF() {
         };
         return chartMapping[canvasId];
     };
-    
-    // Función mejorada para capturar gráficos
+
     const capturarGraficoComoImagen = async (chartInstance, width = 800) => {
         return new Promise((resolve) => {
-            // Crear un canvas temporal con alta resolución
             const tempCanvas = document.createElement('canvas');
-            const scaleFactor = 2; // Aumentar para mejor calidad
+            const scaleFactor = 2;
             tempCanvas.width = width * scaleFactor;
             tempCanvas.height = (chartInstance.height * width * scaleFactor) / chartInstance.width;
-            
-            // Configurar contexto
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.fillStyle = 'white';
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            
-            // Dibujar el gráfico
             tempCtx.drawImage(chartInstance.canvas, 0, 0, tempCanvas.width, tempCanvas.height);
-            
-            // Convertir a imagen
             const img = new Image();
             img.onload = () => resolve(img);
             img.src = tempCanvas.toDataURL('image/png', 1.0);
         });
     };
-    
-    // Función para agregar gráficos al PDF
+
     const agregarGraficoAPDF = async (elementId, titulo) => {
         checkPageBreak(300);
-        
-        // Agregar título del gráfico
         doc.setFontSize(14);
         doc.setTextColor(0, 0, 0);
         doc.text(titulo, margin, yPos);
         yPos += 20;
         
         try {
-            // Intentar obtener el gráfico de Chart.js
             const chart = obtenerChartPorId(elementId);
             if (chart) {
-                // Capturar como imagen de alta calidad
                 const img = await capturarGraficoComoImagen(chart, pageWidth);
                 const imgHeight = (img.height * pageWidth) / img.width;
-                
-                // Asegurar que cabe en la página
                 if (yPos + imgHeight > pageHeight - margin) {
                     doc.addPage();
                     yPos = margin;
                 }
-                
                 doc.addImage(img.src, 'PNG', margin, yPos, pageWidth, imgHeight);
                 yPos += imgHeight + 20;
                 return;
             }
-            
-            // Fallback para elementos que no son gráficos de Chart.js
             const element = document.getElementById(elementId);
             if (!element) return;
-            
-            await new Promise(resolve => setTimeout(resolve, 300)); // Pequeña pausa
-            
+            await new Promise(resolve => setTimeout(resolve, 300));
             const canvas = await html2canvas(element, {
-                scale: 2,
-                logging: false,
-                useCORS: true,
-                backgroundColor: '#FFFFFF',
-                allowTaint: true
+                scale: 2, logging: false, useCORS: true, backgroundColor: '#FFFFFF', allowTaint: true
             });
-            
             const imgData = canvas.toDataURL('image/png');
             const imgHeight = (canvas.height * pageWidth) / canvas.width;
-            
             doc.addImage(imgData, 'PNG', margin, yPos, pageWidth, imgHeight);
             yPos += imgHeight + 20;
         } catch (error) {
@@ -1388,73 +1460,65 @@ function generarPDF() {
             agregarTextoAPDF(`[No se pudo cargar el gráfico: ${titulo}]`, 10);
         }
     };
-    
-    // Función para agregar tablas al PDF
+
     const agregarTablaAPDF = (elementId, titulo) => {
         const element = document.getElementById(elementId);
         if (!element) return;
-        
         checkPageBreak(300);
-        
-        // Agregar título de la tabla
         doc.setFontSize(14);
         doc.text(titulo, margin, yPos);
         yPos += 20;
-        
-        // Capturar datos de la tabla
         const rows = element.querySelectorAll('tr');
         if (rows.length === 0) return;
-        
         const headers = Array.from(rows[0].querySelectorAll('th')).map(th => th.textContent.trim());
         const data = [];
-        
         for (let i = 1; i < rows.length; i++) {
             data.push(Array.from(rows[i].querySelectorAll('td')).map(td => td.textContent.trim()));
         }
-        
-        // Configurar estilo de la tabla
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
-        
-        // Configurar autoTable
         doc.autoTable({
             startY: yPos,
             head: [headers],
             body: data,
             margin: { left: margin },
-            styles: {
-                fontSize: 8,
-                cellPadding: 4,
-                overflow: 'linebreak'
-            },
-            headStyles: {
-                fillColor: [44, 62, 80],
-                textColor: [255, 255, 255],
-                fontStyle: 'bold'
-            },
-            alternateRowStyles: {
-                fillColor: [240, 240, 240]
-            }
+            styles: { fontSize: 8, cellPadding: 4, overflow: 'linebreak' },
+            headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [240, 240, 240] }
         });
-        
         yPos = doc.lastAutoTable.finalY + 20;
     };
-    
-    // Función para agregar texto al PDF
+
     const agregarTextoAPDF = (texto, fontSize = 12, isBold = false, align = 'left') => {
-        checkPageBreak(fontSize * 5); // Estimación de espacio necesario
-        
+        checkPageBreak(fontSize * 5);
         doc.setFontSize(fontSize);
         doc.setFont(isBold ? 'helvetica-bold' : 'helvetica');
         doc.text(texto, margin, yPos, { align, maxWidth: pageWidth });
-        
         yPos += fontSize * (doc.splitTextToSize(texto, pageWidth).length * 1.2);
     };
-    
-    // Proceso de generación del PDF (usando async/await)
+
+    // ========= Proceso de generación =========
     (async () => {
         try {
-            // 1. Portada y resumen ejecutivo
+            // === PÁGINA 1: Proyección Inicial (como pediste) ===
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Reporte de Análisis Presupuestal Municipal', pageWidth / 2 + margin, yPos + 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.text(`Generado el: ${new Date().toLocaleDateString('es-CO', { 
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            })}`, margin, yPos + 40);
+            yPos += 60;
+
+            // Proyección de Ingresos y Gastos 2026 (lee Base, Tasa % y Proyectado)
+            exportarProyeccionAPDF('ingresos-table', 'Presupuesto de Ingresos 2026', 'total-ingresos-2025', 'total-ingresos-2026');
+            exportarProyeccionAPDF('gastos-table',   'Presupuesto de Gastos 2026',   'total-gastos-2025',   'total-gastos-2026');
+
+            // === PÁGINA 2: Portada (se conserva igual que tu versión) ===
+            doc.addPage();
+            yPos = margin;
+
             doc.setFillColor(240, 240, 240);
             doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), 'F');
             
@@ -1467,63 +1531,58 @@ function generarPDF() {
             doc.text(`Período: 2025 - 2026`, pageWidth / 2 + margin, 220, { align: 'center' });
             
             doc.setFontSize(12);
-            doc.text(`Generado por: ${document.querySelector('footer p:nth-child(2)').textContent.replace('Desarrollada por: ', '')}`, 
-                    pageWidth / 2 + margin, 260, { align: 'center' });
-            
+            const autor = document.querySelector('footer p:nth-child(2)')?.textContent.replace('Desarrollada por: ', '') || '';
+            doc.text(`Generado por: ${"App Contable"}`, pageWidth / 2 + margin, 260, { align: 'center' });
+
+            // === PÁGINA 3+: resto intacto ===
             doc.addPage();
             yPos = margin;
-            
+
             // 2. Resumen ejecutivo
             agregarTextoAPDF('RESUMEN EJECUTIVO', 16, true);
             agregarTextoAPDF('Este documento presenta un análisis completo del presupuesto municipal, incluyendo proyecciones, ejecución y modificaciones realizadas durante el período fiscal.', 10);
             
-            // Datos clave
-            const totalIngresos = parseFloat(document.getElementById('total-ingresos-2026').textContent.replace(/\./g, '')) || 0;
-            const totalGastos = parseFloat(document.getElementById('total-gastos-2026').textContent.replace(/\./g, '')) || 0;
+            // Datos clave (usa los totales actuales de la UI)
+            const totalIngresos = parseFloat((document.getElementById('total-ingresos-2026')?.textContent || '0').replace(/\./g, '')) || 0;
+            const totalGastos = parseFloat((document.getElementById('total-gastos-2026')?.textContent || '0').replace(/\./g, '')) || 0;
             const diferencia = totalIngresos - totalGastos;
             
             agregarTextoAPDF('DATOS CLAVE:', 12, true);
-            agregarTextoAPDF(`• Total Ingresos 2026: $${formatNumber(totalIngresos)}`);
-            agregarTextoAPDF(`• Total Gastos 2026: $${formatNumber(totalGastos)}`);
-            agregarTextoAPDF(`• Resultado: ${diferencia >= 0 ? 'Superávit' : 'Déficit'} de $${formatNumber(Math.abs(diferencia))}`);
-            
-            // 3. Gráficos principales (con pausas entre ellos)
+            agregarTextoAPDF(`• Total Ingresos 2026: $${fmt(totalIngresos)}`);
+            agregarTextoAPDF(`• Total Gastos 2026: $${fmt(totalGastos)}`);
+            agregarTextoAPDF(`• Resultado: ${diferencia >= 0 ? 'Superávit' : 'Déficit'} de $${fmt(Math.abs(diferencia))}`);
+
+            // 3. Gráficos principales
             await new Promise(resolve => setTimeout(resolve, 300));
             await agregarGraficoAPDF('ejecucionChart', 'Gráfico 1: Ejecución de Ingresos vs Gastos');
-            
             await new Promise(resolve => setTimeout(resolve, 300));
             await agregarGraficoAPDF('composicionGastosChart', 'Gráfico 2: Composición de Gastos');
-            
             await new Promise(resolve => setTimeout(resolve, 300));
             await agregarGraficoAPDF('comparativoLineChart', 'Gráfico 3: Comparativo 2025 vs 2026');
-            
             await new Promise(resolve => setTimeout(resolve, 300));
             await agregarGraficoAPDF('topConceptosChart', 'Gráfico 4: Top 5 Conceptos de Gasto');
-            
+
             // 4. Tablas de datos
             agregarTablaAPDF('indicadores-table', 'Tabla 1: Indicadores Presupuestales');
             agregarTablaAPDF('modificaciones-table', 'Tabla 2: Historial de Modificaciones');
-            
+
             // 5. Análisis cualitativo
             agregarTextoAPDF('ANÁLISIS CUALITATIVO', 16, true);
-            const analisisText = document.getElementById('analisis-texto').value || 'No se ha ingresado análisis cualitativo.';
+            const analisisText = document.getElementById('analisis-texto')?.value || 'No se ha ingresado análisis cualitativo.';
             doc.setFontSize(11);
             doc.text(analisisText, margin, yPos, { maxWidth: pageWidth });
-            
-            // 6. Pie de página
+
+            // 6. Conclusiones y recomendaciones
             doc.addPage();
             yPos = margin;
             agregarTextoAPDF('CONCLUSIONES Y RECOMENDACIONES', 16, true, 'center');
             agregarTextoAPDF(' ', 12);
-            
-            const recomendaciones = document.getElementById('recomendaciones')?.textContent || 
-                                  'No se generaron recomendaciones automáticas.';
+            const recomendaciones = document.getElementById('recomendaciones')?.textContent || 'No se generaron recomendaciones automáticas.';
             doc.setFontSize(11);
             doc.text(recomendaciones, margin, yPos, { maxWidth: pageWidth });
-            
-            // Guardar el PDF
+
+            // Guardar
             doc.save(`Analisis_Presupuestal_${new Date().toISOString().split('T')[0]}.pdf`);
-            
             mostrarMensaje("PDF generado con éxito", "success");
         } catch (error) {
             console.error("Error al generar PDF:", error);
@@ -1531,6 +1590,7 @@ function generarPDF() {
         }
     })();
 }
+
 
 // Agregar evento al botón de generar PDF
 document.getElementById('generar-pdf')?.addEventListener('click', generarPDF);
