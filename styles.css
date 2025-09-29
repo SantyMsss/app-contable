@@ -254,3 +254,22 @@ button#agregar-gasto {
     border-radius: 3px;
     cursor: pointer;
 }
+
+/* Estilos para modificaciones automáticas */
+.modificacion-automatica {
+    background-color: #e8f5e8 !important;
+    border-left: 4px solid #28a745;
+}
+
+.modificacion-automatica td {
+    position: relative;
+}
+
+.modificacion-automatica::before {
+    content: "🔄";
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+}

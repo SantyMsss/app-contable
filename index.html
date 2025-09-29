@@ -28,8 +28,7 @@
             </div>
             
             <div class="tabs">
-                <div class="tab active" data-subtab="ingresos-proy">Ingresos</div>
-                <div class="tab" data-subtab="gastos-proy">Gastos</div>
+
             </div>
             
             <div id="ingresos-proy" class="subtab-content active">
@@ -364,8 +363,7 @@
             
             <h3>Presupuesto Actualizado</h3>
             <div class="tabs">
-                <div class="tab active" data-subtab="ingresos-act">Ingresos Actualizados</div>
-                <div class="tab" data-subtab="gastos-act">Gastos Actualizados</div>
+            
             </div>
             
             <div id="ingresos-act" class="subtab-content active">
@@ -410,22 +408,7 @@
                 <p>A continuación se presentan los principales indicadores calculados automáticamente a partir de su presupuesto. Estos indicadores le ayudarán a evaluar la salud financiera del municipio.</p>
             </div>
             
-            <div class="chart-container">
-<!-- Gráfico de ejecución de ingresos y gastos -->
-<canvas id="ejecucionChart" height="200"></canvas>
 
-<!-- Gráfico de composición del gasto -->
-<canvas id="composicionGastosChart" height="200"></canvas>
-
-<!-- Gráfico comparativo entre ingresos y gastos 2025 vs 2026 -->
-<canvas id="comparativoLineChart" height="200"></canvas>
-
-<!-- Gráfico de barras horizontales con los 5 conceptos de gasto más altos -->
-<canvas id="topConceptosChart" height="200"></canvas>
-
-<!-- Resumen estadístico -->
-<div id="resumen-estadistico" class="instructions"></div>
-            </div>
 
             
             <table id="indicadores-table">
@@ -471,9 +454,7 @@
                 </tbody>
             </table>
             
-            <div class="chart-container">
-                <canvas id="composicionGastosChart"></canvas>
-            </div>
+
         </div>
         
         <!-- Análisis Presupuestal -->
@@ -517,7 +498,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="app.js"></script>
+
+    <script src="script.js"></script>
 </body>
 </html>

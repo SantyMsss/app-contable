@@ -53,18 +53,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('exportar-datos').addEventListener('click', exportarDatos);
     document.getElementById('importar-datos').addEventListener('change', importarDatos);
     
-    // Inicializar gráficos
-    inicializarGraficos();
-    
     // Cargar datos de ejemplo (para demostración)
     cargarDatosEjemplo();
-    actualizarGraficos();
-
-    // En la función setupTabs(), cuando se detecta el clic en la pestaña de Indicadores:
-if (target === 'indicadores') {
+    
+    // Calcular indicadores iniciales una vez
     calcularIndicadores();
-    actualizarGraficos();
-}
 
 
 
@@ -121,9 +114,9 @@ function setupTabs(tabSelector, contentSelector, attribute = 'data-tab') {
             const target = tab.getAttribute(attribute);
             document.getElementById(target).classList.add('active');
             
-            // Si es la pestaña de indicadores, actualizar gráficos
+            // Si es la pestaña de indicadores, calcular indicadores
             if (target === 'indicadores') {
-                actualizarGraficos();
+                calcularIndicadores();
             }
         });
     });
@@ -142,6 +135,15 @@ function toggleDestinoTraslado() {
         area.disabled = true;
 
         // Cargar conceptos disponibles para gastos
+        actualizarConceptosModificacion();
+    } else if (tipo === 'adicion' || tipo === 'reduccion') {
+        destinoGroup.style.display = 'none'; // NO mostrar selector de concepto destino
+
+        // Forzar selección de 'ingresos' y deshabilitar
+        area.value = 'ingresos';
+        area.disabled = true;
+
+        // Cargar conceptos disponibles para ingresos (origen)
         actualizarConceptosModificacion();
     } else {
         destinoGroup.style.display = 'none';
@@ -183,6 +185,24 @@ function actualizarConceptosModificacion() {
             optionDestino.textContent = concepto;
             destinoSelect.appendChild(optionDestino);
         }
+    });
+}
+
+function actualizarConceptosDestino() {
+    const destinoSelect = document.getElementById('concepto-destino');
+    
+    // Limpiar opciones
+    destinoSelect.innerHTML = '';
+    
+    // Cargar conceptos de gastos para el destino
+    const conceptosGastos = Object.keys(presupuesto.proyeccion.gastos);
+        
+    // Agregar opciones de gastos
+    conceptosGastos.forEach(concepto => {
+        const optionDestino = document.createElement('option');
+        optionDestino.value = concepto;
+        optionDestino.textContent = concepto;
+        destinoSelect.appendChild(optionDestino);
     });
 }
 
@@ -456,17 +476,59 @@ function agregarModificacion() {
     }
 
     // Verificar disponibilidad del concepto origen (solo en reducción y traslado)
-if (tipo === 'reduccion' || tipo === 'traslado') {
-    const disponible = presupuesto.actualizado[area][concepto] || 0;
+    if (tipo === 'reduccion' || tipo === 'traslado') {
+        const disponible = presupuesto.actualizado[area][concepto] || 0;
 
-    if (valor > disponible) {
-        mostrarMensaje(`No se puede ${tipo === 'traslado' ? 'trasladar' : 'reducir'} ${formatNumber(valor)} millones del concepto "${concepto}" porque solo hay disponibles ${formatNumber(disponible)} millones.`, 'danger');
+        if (valor > disponible) {
+            mostrarMensaje(`No se puede ${tipo === 'traslado' ? 'trasladar' : 'reducir'} ${formatNumber(valor)} millones del concepto "${concepto}" porque solo hay disponibles ${formatNumber(disponible)} millones.`, 'danger');
+            return;
+        }
+    }
+    
+    // Para traslados, crear y aplicar inmediatamente
+    if (tipo === 'traslado') {
+        if (!conceptoDestino) {
+            mostrarMensaje('Debe seleccionar un concepto destino para el traslado', 'danger');
+            return;
+        }
+        
+        const modificacion = {
+            id: Date.now(),
+            tipo,
+            area,
+            concepto,
+            conceptoDestino,
+            valor,
+            justificacion,
+            fecha: new Date().toLocaleDateString()
+        };
+
+        presupuesto.modificaciones.push(modificacion);
+        aplicarModificacion(modificacion);
+        actualizarTablas();
+        limpiarFormulario();
+        mostrarMensaje('Traslado aplicado correctamente', 'success');
         return;
     }
-}
-
     
-    // Crear objeto de modificación
+    // Para adiciones y reducciones de ingresos, mostrar sistema de distribución en gastos
+    if ((tipo === 'adicion' || tipo === 'reduccion') && area === 'ingresos') {
+        // Limpiar formulario
+        document.getElementById('tipo-modificacion').value = '';
+        document.getElementById('area-modificacion').value = '';
+        document.getElementById('concepto-modificacion').value = '';
+        document.getElementById('valor-modificacion').value = '';
+        document.getElementById('justificacion-modificacion').value = '';
+
+        if (tipo === 'adicion') {
+            mostrarDistribucionIngreso(valor, concepto, justificacion, 'adicion');
+        } else if (tipo === 'reduccion') {
+            mostrarDistribucionIngreso(valor, concepto, justificacion, 'reduccion');
+        }
+        return;
+    }
+    
+    // Para otros casos (adiciones/reducciones directas en gastos), aplicar directamente
     const modificacion = {
         id: Date.now(),
         tipo,
@@ -478,12 +540,11 @@ if (tipo === 'reduccion' || tipo === 'traslado') {
         fecha: new Date().toLocaleDateString()
     };
 
-    
-    // Agregar al array de modificaciones
     presupuesto.modificaciones.push(modificacion);
-    
-    // Aplicar modificación al presupuesto actualizado
     aplicarModificacion(modificacion);
+    actualizarTablas();
+    limpiarFormulario();
+    mostrarMensaje('Modificación aplicada correctamente', 'success');
     
     // Actualizar tabla de modificaciones
     actualizarTablaModificaciones();
@@ -494,22 +555,44 @@ if (tipo === 'reduccion' || tipo === 'traslado') {
     // Limpiar formulario
     document.getElementById('valor-modificacion').value = '';
     document.getElementById('justificacion-modificacion').value = '';
-    
-    mostrarMensaje('Modificación agregada correctamente', 'success');
 
         if (tipo === 'adicion') {
         mostrarDistribucion(valor, area);
+    } else if (tipo === 'reduccion') {
+        mostrarDistribucionReduccion(valor, area);
     }
 
         function mostrarDistribucion(valor, areaOrigen) {
         const contenedor = document.getElementById('distribucion-contenedor');
         const seccion = document.getElementById('distribucion-gasto');
+        const etiqueta = seccion.querySelector('label');
         contenedor.innerHTML = '';
         seccion.style.display = 'block';
         seccion.setAttribute('data-valor-total', valor);
         seccion.setAttribute('data-area-origen', areaOrigen);
+        seccion.setAttribute('data-tipo-operacion', 'adicion');
 
-        const conceptos = Object.keys(presupuesto.proyeccion.gastos); // por defecto: distribuir a gastos
+        // Actualizar texto de la etiqueta
+        etiqueta.textContent = 'Distribución de la Adición (Debe sumar exactamente el valor ingresado):';
+
+        const conceptos = Object.keys(presupuesto.proyeccion.ingresos); // distribuir a ingresos para adiciones
+        agregarFilaDistribucion(conceptos);
+    }
+
+    function mostrarDistribucionReduccion(valor, areaOrigen) {
+        const contenedor = document.getElementById('distribucion-contenedor');
+        const seccion = document.getElementById('distribucion-gasto');
+        const etiqueta = seccion.querySelector('label');
+        contenedor.innerHTML = '';
+        seccion.style.display = 'block';
+        seccion.setAttribute('data-valor-total', valor);
+        seccion.setAttribute('data-area-origen', areaOrigen);
+        seccion.setAttribute('data-tipo-operacion', 'reduccion');
+
+        // Actualizar texto de la etiqueta
+        etiqueta.textContent = 'Distribución de la Reducción (Debe sumar exactamente el valor ingresado):';
+
+        const conceptos = Object.keys(presupuesto.proyeccion.ingresos); // distribuir reducciones desde ingresos
         agregarFilaDistribucion(conceptos);
     }
 
@@ -530,8 +613,18 @@ if (tipo === 'reduccion' || tipo === 'traslado') {
     }
 
         document.getElementById('agregar-distribucion').addEventListener('click', () => {
-        const conceptos = Object.keys(presupuesto.proyeccion.gastos);
-        agregarFilaDistribucion(conceptos);
+        // Verificar si es distribución de ingresos en gastos o distribución normal
+        const conceptoIngreso = document.getElementById('distribucion-gasto').getAttribute('data-concepto-ingreso');
+        
+        if (conceptoIngreso) {
+            // Es distribución de ingresos en gastos
+            const conceptosGasto = Object.keys(presupuesto.proyeccion.gastos);
+            agregarFilaDistribucionGasto(conceptosGasto);
+        } else {
+            // Es distribución normal (ingresos en ingresos)
+            const conceptos = Object.keys(presupuesto.proyeccion.ingresos);
+            agregarFilaDistribucion(conceptos);
+        }
     });
 
     document.addEventListener('click', function(e) {
@@ -543,6 +636,7 @@ if (tipo === 'reduccion' || tipo === 'traslado') {
     document.getElementById('guardar-distribucion').addEventListener('click', () => {
     const totalEsperado = parseFloat(document.getElementById('distribucion-gasto').getAttribute('data-valor-total'));
     const areaOrigen = document.getElementById('distribucion-gasto').getAttribute('data-area-origen');
+    const tipoOperacion = document.getElementById('distribucion-gasto').getAttribute('data-tipo-operacion');
     const filas = document.querySelectorAll('.fila-distribucion');
 
     let sumaDistribucion = 0;
@@ -560,24 +654,171 @@ if (tipo === 'reduccion' || tipo === 'traslado') {
         return;
     }
 
-    // Aplicar al presupuesto actualizado
+    // Aplicar al presupuesto actualizado según el tipo de operación
     distribuciones.forEach(d => {
-        presupuesto.actualizado.gastos[d.concepto] = (presupuesto.actualizado.gastos[d.concepto] || 0) + d.valor;
+        if (tipoOperacion === 'adicion') {
+            presupuesto.actualizado.ingresos[d.concepto] = (presupuesto.actualizado.ingresos[d.concepto] || 0) + d.valor;
+        } else if (tipoOperacion === 'reduccion') {
+            presupuesto.actualizado.ingresos[d.concepto] = Math.max(0, (presupuesto.actualizado.ingresos[d.concepto] || 0) - d.valor);
+        }
     });
 
     actualizarPresupuestoActualizado();
-    mostrarMensaje('Distribución aplicada correctamente.', 'success');
+    const mensajeOperacion = tipoOperacion === 'adicion' ? 'Distribución aplicada correctamente.' : 'Distribución de reducción aplicada correctamente.';
+    mostrarMensaje(mensajeOperacion, 'success');
 
     // Limpiar UI
     document.getElementById('distribucion-gasto').style.display = 'none';
     document.getElementById('distribucion-contenedor').innerHTML = '';
 });
 
-
-
-
 }
 
+// Nueva función para distribución de modificaciones de ingresos en gastos
+function mostrarDistribucionIngreso(valor, conceptoIngreso, justificacion, tipoOperacion) {
+    const contenedor = document.getElementById('distribucion-contenedor');
+    const seccion = document.getElementById('distribucion-gasto');
+    const etiqueta = seccion.querySelector('label');
+    contenedor.innerHTML = '';
+    seccion.style.display = 'block';
+    seccion.setAttribute('data-valor-total', valor);
+    seccion.setAttribute('data-concepto-ingreso', conceptoIngreso);
+    seccion.setAttribute('data-justificacion', justificacion);
+    seccion.setAttribute('data-tipo-operacion', tipoOperacion);
+
+    // Actualizar texto de la etiqueta
+    etiqueta.textContent = `Distribución de la ${tipoOperacion.charAt(0).toUpperCase() + tipoOperacion.slice(1)} en Gastos (Debe sumar exactamente el valor ingresado):`;
+
+    const conceptosGasto = Object.keys(presupuesto.proyeccion.gastos);
+    agregarFilaDistribucionGasto(conceptosGasto);
+
+    // Modificar el event listener del botón guardar para manejar distribución en gastos
+    const botonGuardar = document.getElementById('guardar-distribucion');
+    botonGuardar.onclick = guardarDistribucionIngreso;
+}
+
+function agregarFilaDistribucionGasto(conceptos) {
+    const contenedor = document.getElementById('distribucion-contenedor');
+    const fila = document.createElement('div');
+    fila.classList.add('fila-distribucion');
+
+    fila.innerHTML = `
+        <select class="concepto-distribucion">
+            ${conceptos.map(c => `<option value="${c}">${c}</option>`).join('')}
+        </select>
+        <input type="number" class="valor-distribucion" min="0" placeholder="Valor (millones)">
+        <button type="button" class="btn-eliminar-fila-distribucion">X</button>
+    `;
+
+    contenedor.appendChild(fila);
+}
+
+function guardarDistribucionIngreso() {
+    const totalEsperado = parseFloat(document.getElementById('distribucion-gasto').getAttribute('data-valor-total'));
+    const conceptoIngreso = document.getElementById('distribucion-gasto').getAttribute('data-concepto-ingreso');
+    const justificacion = document.getElementById('distribucion-gasto').getAttribute('data-justificacion');
+    const tipoOperacion = document.getElementById('distribucion-gasto').getAttribute('data-tipo-operacion');
+    const filas = document.querySelectorAll('.fila-distribucion');
+
+    let sumaDistribucion = 0;
+    const distribuciones = [];
+
+    filas.forEach(fila => {
+        const concepto = fila.querySelector('.concepto-distribucion').value;
+        const valor = parseFloat(fila.querySelector('.valor-distribucion').value) || 0;
+        if (valor > 0) {
+            sumaDistribucion += valor;
+            distribuciones.push({ concepto, valor });
+        }
+    });
+
+    if (Math.abs(sumaDistribucion - totalEsperado) > 0.01) {
+        mostrarMensaje(`La suma de la distribución (${formatNumber(sumaDistribucion)}) debe ser igual al valor original (${formatNumber(totalEsperado)}).`, 'danger');
+        return;
+    }
+
+    if (distribuciones.length === 0) {
+        mostrarMensaje('Debe distribuir al menos en un concepto de gasto', 'danger');
+        return;
+    }
+
+    // Para reducciones, verificar disponibilidad en cada concepto de gasto
+    if (tipoOperacion === 'reduccion') {
+        for (const dist of distribuciones) {
+            const disponible = presupuesto.actualizado.gastos[dist.concepto] || 0;
+            if (dist.valor > disponible) {
+                mostrarMensaje(`No se puede reducir ${formatNumber(dist.valor)} millones del concepto de gasto "${dist.concepto}" porque solo hay disponibles ${formatNumber(disponible)} millones.`, 'danger');
+                return;
+            }
+        }
+    }
+
+    // Crear modificación en ingresos
+    const modificacionIngreso = {
+        id: Date.now(),
+        tipo: tipoOperacion,
+        area: 'ingresos',
+        concepto: conceptoIngreso,
+        conceptoDestino: '',
+        valor: totalEsperado,
+        justificacion: justificacion,
+        fecha: new Date().toLocaleDateString()
+    };
+
+    presupuesto.modificaciones.push(modificacionIngreso);
+    aplicarModificacion(modificacionIngreso);
+
+    // Crear modificaciones en gastos para cada distribución
+    distribuciones.forEach((dist, index) => {
+        const modificacionGasto = {
+            id: Date.now() + index + 1,
+            tipo: tipoOperacion,
+            area: 'gastos',
+            concepto: dist.concepto,
+            conceptoDestino: '',
+            valor: dist.valor,
+            justificacion: `Equilibrio por ${tipoOperacion} de ingreso "${conceptoIngreso}": ${justificacion}`,
+            fecha: new Date().toLocaleDateString(),
+            esEquilibrio: true
+        };
+        
+        presupuesto.modificaciones.push(modificacionGasto);
+        aplicarModificacion(modificacionGasto);
+    });
+
+    actualizarTablas();
+    console.log('Modificaciones después de distribución:', presupuesto.modificaciones); // Debug
+    const mensajeOperacion = tipoOperacion === 'adicion' ? 
+        'Adición distribuida correctamente en gastos para mantener equilibrio' : 
+        'Reducción distribuida correctamente en gastos para mantener equilibrio';
+    mostrarMensaje(mensajeOperacion, 'success');
+
+    // Limpiar UI
+    document.getElementById('distribucion-gasto').style.display = 'none';
+    document.getElementById('distribucion-contenedor').innerHTML = '';
+    limpiarFormulario();
+}
+
+function limpiarFormulario() {
+    document.getElementById('tipo-modificacion').value = '';
+    document.getElementById('area-modificacion').value = '';
+    document.getElementById('concepto-modificacion').value = '';
+    document.getElementById('concepto-destino').value = '';
+    document.getElementById('valor-modificacion').value = '';
+    document.getElementById('justificacion-modificacion').value = '';
+    
+    // Ocultar grupo de concepto destino
+    document.getElementById('concepto-destino-group').style.display = 'none';
+}
+
+function actualizarTablas() {
+    actualizarPresupuestoActualizado();
+    actualizarTablaModificaciones();
+    calcularIndicadores();
+    mostrarEquilibrio();
+}
+
+// Función para mantener equilibrio automático entre ingresos y gastos
 function aplicarModificacion(modificacion) {
     const { tipo, area, concepto, conceptoDestino, valor } = modificacion;
     
@@ -606,23 +847,34 @@ function actualizarTablaModificaciones() {
     const tbody = document.querySelector('#modificaciones-table tbody');
     tbody.innerHTML = '';
     
+    console.log('Actualizando tabla con modificaciones:', presupuesto.modificaciones); // Debug
+    
     presupuesto.modificaciones.forEach(mod => {
         const row = document.createElement('tr');
         
+        // Agregar clase especial para modificaciones de equilibrio
+        if (mod.esEquilibrio) {
+            row.classList.add('modificacion-automatica');
+        }
+        
+        const tipoTexto = mod.esEquilibrio ? 
+            `${mod.tipo.charAt(0).toUpperCase() + mod.tipo.slice(1)} (Equilibrio)` :
+            mod.tipo.charAt(0).toUpperCase() + mod.tipo.slice(1);
+        
         row.innerHTML = `
-            <td>${mod.tipo.charAt(0).toUpperCase() + mod.tipo.slice(1)}</td>
+            <td>${tipoTexto}</td>
             <td>${mod.area.charAt(0).toUpperCase() + mod.area.slice(1)}</td>
             <td>${mod.concepto}</td>
             <td>${mod.conceptoDestino || '-'}</td>
             <td>${formatNumber(mod.valor)}</td>
             <td>${mod.justificacion}</td>
-            <td><button class="btn-eliminar" data-id="${mod.id}">Eliminar</button></td>
+            <td>${mod.esEquilibrio ? '<span style="color: #28a745;">Equilibrio</span>' : `<button class="btn-eliminar" data-id="${mod.id}">Eliminar</button>`}</td>
         `;
         
         tbody.appendChild(row);
     });
     
-    // Agregar eventos a botones eliminar
+    // Agregar eventos a botones eliminar (solo para modificaciones manuales)
     document.querySelectorAll('.btn-eliminar').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = parseInt(this.getAttribute('data-id'));
@@ -733,54 +985,143 @@ function actualizarPresupuestoActualizado() {
         alertDiv.className = 'alert alert-danger';
         alertDiv.style.display = 'block';
     }
+    
+    // Recalcular indicadores cuando se actualiza el presupuesto
+    calcularIndicadores();
 }
 
 // Funciones para indicadores
 function calcularIndicadores() {
-    // Totales
-    const totalIngresos = Object.values(presupuesto.actualizado.ingresos).reduce((a, b) => a + b, 0);
-    const totalGastos = Object.values(presupuesto.actualizado.gastos).reduce((a, b) => a + b, 0);
+    // ===== CÁLCULO DE TOTALES APROBADOS (PRESUPUESTO ACTUALIZADO) =====
+    const totalIngresosAprobado = Object.values(presupuesto.actualizado.ingresos).reduce((a, b) => a + b, 0);
+    const totalGastosAprobado = Object.values(presupuesto.actualizado.gastos).reduce((a, b) => a + b, 0);
     
-    // Ejecución (asumimos algún porcentaje de ejecución para el ejemplo)
-    const ejecucionIngresos = Math.min(100, Math.round(Math.random() * 30 + 70)); // Entre 70% y 100%
-    const ejecucionGastos = Math.min(100, Math.round(Math.random() * 20 + 60)); // Entre 60% y 80%
+    // ===== SIMULACIÓN DE EJECUCIÓN (en un caso real vendrían de inputs del usuario) =====
+    // Para demostración, calcular porcentajes realistas de ejecución basados en:
+    // - Mes del año (mayor ejecución hacia fin de año)
+    // - Tamaño del presupuesto (presupuestos más grandes suelen tener menor ejecución)
     
-    // Gastos de funcionamiento (sumar servicios personales, honorarios, gastos generales, etc.)
-    const gastosFuncionamiento = 
-        (presupuesto.actualizado.gastos['Servicios Personales'] || 0) +
-        (presupuesto.actualizado.gastos['Honorarios Concejales'] || 0) +
-        (presupuesto.actualizado.gastos['Gastos Generales'] || 0) +
-        (presupuesto.actualizado.gastos['Sistematización'] || 0) +
-        (presupuesto.actualizado.gastos['Pensiones'] || 0) +
-        (presupuesto.actualizado.gastos['Cesantías'] || 0) +
-        (presupuesto.actualizado.gastos['EPS'] || 0) +
-        (presupuesto.actualizado.gastos['Caja de Compensación'] || 0) +
-        (presupuesto.actualizado.gastos['ESAP, Escuelas industriales'] || 0) +
-        (presupuesto.actualizado.gastos['ARL'] || 0) +
-        (presupuesto.actualizado.gastos['Concejo Municipal'] || 0) +
-        (presupuesto.actualizado.gastos['Personería Municipal'] || 0);
+    const mesActual = new Date().getMonth() + 1; // 1-12
+    const factorMes = Math.min(1.0, mesActual / 12); // Factor de 0.08 a 1.0
     
-    // Gastos de inversión (sumar proyectos y cobertura salud)
-    const gastosInversion = 
-        (presupuesto.actualizado.gastos['Proyecto 1'] || 0) +
-        (presupuesto.actualizado.gastos['Proyecto 2'] || 0) +
-        (presupuesto.actualizado.gastos['Proyecto 3'] || 0) +
-        (presupuesto.actualizado.gastos['Proyecto 4'] || 0) +
-        (presupuesto.actualizado.gastos['Cobertura Salud'] || 0);
+    // Porcentajes base ajustados por el factor de mes y tamaño del presupuesto
+    let porcentajeEjecucionIngresos = 0;
+    let porcentajeEjecucionGastos = 0;
     
-    // Transferencias (SGP y FONPET)
-    const transferencias = 
-        (presupuesto.actualizado.ingresos['SGP - Propósito General'] || 0) +
-        (presupuesto.actualizado.ingresos['FONPET'] || 0);
+    if (totalIngresosAprobado > 0) {
+        // Ingresos: Base 85%, ajustado por mes (mínimo 70%)
+        porcentajeEjecucionIngresos = Math.max(70, 85 * factorMes);
+        // Si el presupuesto es muy grande (>50000 millones), reducir 5%
+        if (totalIngresosAprobado > 50000) porcentajeEjecucionIngresos -= 5;
+    }
     
-    // Calcular indicadores
+    if (totalGastosAprobado > 0) {
+        // Gastos: Base 75%, ajustado por mes (mínimo 60%)
+        porcentajeEjecucionGastos = Math.max(60, 75 * factorMes);
+        // Si el presupuesto es muy grande (>50000 millones), reducir 5%
+        if (totalGastosAprobado > 50000) porcentajeEjecucionGastos -= 5;
+    }
+    
+    const totalIngresosEjecutado = (totalIngresosAprobado * porcentajeEjecucionIngresos) / 100;
+    const totalGastosEjecutado = (totalGastosAprobado * porcentajeEjecucionGastos) / 100;
+    
+    // ===== CÁLCULO DE GASTOS DE FUNCIONAMIENTO =====
+    // Incluir conceptos fijos de funcionamiento
+    const conceptosFuncionamiento = [
+        'Servicios Personales', 'Honorarios Concejales', 'Gastos Generales', 
+        'Sistematización', 'Pensiones', 'Cesantías', 'EPS', 
+        'Caja de Compensación', 'ESAP, Escuelas industriales', 'ARL', 
+        'Concejo Municipal', 'Personería Municipal', 'Contribuciones Nómina'
+    ];
+    
+    let gastosFuncionamiento = 0;
+    for (const [concepto, valor] of Object.entries(presupuesto.actualizado.gastos)) {
+        // Si el concepto está en la lista de funcionamiento, sumarlo
+        if (conceptosFuncionamiento.some(cf => concepto.includes(cf) || cf.includes(concepto))) {
+            gastosFuncionamiento += valor || 0;
+        }
+        // También incluir conceptos que contengan palabras clave de funcionamiento
+        else if (concepto.toLowerCase().includes('personal') || 
+                concepto.toLowerCase().includes('honorario') || 
+                concepto.toLowerCase().includes('general') ||
+                concepto.toLowerCase().includes('nómina') ||
+                concepto.toLowerCase().includes('pensión')) {
+            gastosFuncionamiento += valor || 0;
+        }
+    }
+    
+    // ===== CÁLCULO DE GASTOS DE INVERSIÓN =====
+    // Incluir conceptos fijos de inversión
+    const conceptosInversion = [
+        'Proyecto 1', 'Proyecto 2', 'Proyecto 3', 'Proyecto 4', 'Cobertura Salud'
+    ];
+    
+    let gastosInversion = 0;
+    for (const [concepto, valor] of Object.entries(presupuesto.actualizado.gastos)) {
+        // Si el concepto está en la lista de inversión, sumarlo
+        if (conceptosInversion.some(ci => concepto.includes(ci) || ci.includes(concepto))) {
+            gastosInversion += valor || 0;
+        }
+        // También incluir conceptos que contengan palabras clave de inversión
+        else if (concepto.toLowerCase().includes('proyecto') || 
+                concepto.toLowerCase().includes('cobertura') || 
+                concepto.toLowerCase().includes('inversión') ||
+                concepto.toLowerCase().includes('obra')) {
+            gastosInversion += valor || 0;
+        }
+    }
+    
+    // ===== CÁLCULO DE TRANSFERENCIAS =====
+    // Incluir conceptos fijos de transferencias
+    const conceptosTransferencias = ['SGP - Propósito General', 'FONPET'];
+    
+    let transferencias = 0;
+    for (const [concepto, valor] of Object.entries(presupuesto.actualizado.ingresos)) {
+        // Si el concepto está en la lista de transferencias, sumarlo
+        if (conceptosTransferencias.some(ct => concepto.includes(ct) || ct.includes(concepto))) {
+            transferencias += valor || 0;
+        }
+        // También incluir conceptos que contengan palabras clave de transferencias
+        else if (concepto.toLowerCase().includes('sgp') || 
+                concepto.toLowerCase().includes('fonpet') || 
+                concepto.toLowerCase().includes('transferencia') ||
+                concepto.toLowerCase().includes('participación') ||
+                concepto.toLowerCase().includes('nacional')) {
+            transferencias += valor || 0;
+        }
+    }
+    
+    // ===== CÁLCULO DE INDICADORES PRESUPUESTALES =====
     presupuesto.indicadores = {
-        ejecucionIngresos,
-        ejecucionGastos,
-        relacionFuncionamiento: totalGastos > 0 ? (gastosFuncionamiento / totalGastos) * 100 : 0,
-        relacionInversion: totalGastos > 0 ? (gastosInversion / totalGastos) * 100 : 0,
-        dependenciaTransferencias: totalIngresos > 0 ? (transferencias / totalIngresos) * 100 : 0
+        // 1. Nivel de ejecución presupuestal de ingresos 
+        // Fórmula: (Ingresos Ejecutados / Ingresos Aprobados) * 100
+        ejecucionIngresos: Math.round((porcentajeEjecucionIngresos * 100) / 100),
+        
+        // 2. Nivel de ejecución presupuestal de gastos
+        // Fórmula: (Gastos Ejecutados / Gastos Aprobados) * 100  
+        ejecucionGastos: Math.round((porcentajeEjecucionGastos * 100) / 100),
+        
+        // 3. Relación gasto de funcionamiento / gasto total
+        // Fórmula: (Gastos de Funcionamiento / Gastos Totales) * 100
+        relacionFuncionamiento: totalGastosAprobado > 0 ? Math.round((gastosFuncionamiento / totalGastosAprobado) * 100 * 100) / 100 : 0,
+        
+        // 4. Relación inversión / gasto total  
+        // Fórmula: (Gastos de Inversión / Gastos Totales) * 100
+        relacionInversion: totalGastosAprobado > 0 ? Math.round((gastosInversion / totalGastosAprobado) * 100 * 100) / 100 : 0,
+        
+        // 5. Dependencia de las transferencias
+        // Fórmula: (Transferencias / Ingresos Totales) * 100
+        dependenciaTransferencias: totalIngresosAprobado > 0 ? Math.round((transferencias / totalIngresosAprobado) * 100 * 100) / 100 : 0
     };
+    
+    // Debug: Mostrar cálculos en consola para verificación
+    console.log('=== CÁLCULO DE INDICADORES PRESUPUESTALES ===');
+    console.log(`Total Ingresos Aprobado: ${totalIngresosAprobado.toLocaleString()}`);
+    console.log(`Total Gastos Aprobado: ${totalGastosAprobado.toLocaleString()}`);
+    console.log(`Gastos Funcionamiento: ${gastosFuncionamiento.toLocaleString()}`);
+    console.log(`Gastos Inversión: ${gastosInversion.toLocaleString()}`);
+    console.log(`Transferencias: ${transferencias.toLocaleString()}`);
+    console.log('Indicadores calculados:', presupuesto.indicadores);
     
     // Actualizar tabla de indicadores
     document.getElementById('ejecucion-ingresos').textContent = presupuesto.indicadores.ejecucionIngresos.toFixed(2);
@@ -819,152 +1160,12 @@ function calcularIndicadores() {
     generarRecomendaciones();
 }
 
-function inicializarGraficos() {
-    // Verificar si los elementos canvas existen antes de crear gráficos
-    const ejecucionCtx = document.getElementById('ejecucionChart')?.getContext('2d');
-    const composicionCtx = document.getElementById('composicionGastosChart')?.getContext('2d');
-    const comparativoCtx = document.getElementById('comparativoLineChart')?.getContext('2d');
-    const topCtx = document.getElementById('topConceptosChart')?.getContext('2d');
-
-    if (ejecucionCtx && !presupuesto.chartEjecucion) {
-        presupuesto.chartEjecucion = new Chart(ejecucionCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Ingresos', 'Gastos'],
-                datasets: [{
-                    label: '% Ejecución',
-                    data: [0, 0],
-                    backgroundColor: ['#3498db', '#e74c3c']
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true, max: 100 }
-                }
-            }
-        });
-    }
-
-    if (composicionCtx && !presupuesto.chartComposicionGastos) {
-        presupuesto.chartComposicionGastos = new Chart(composicionCtx, {
-            type: 'pie',
-            data: {
-                labels: ['Funcionamiento', 'Inversión', 'Deuda', 'Otros'],
-                datasets: [{
-                    data: [0, 0, 0, 0],
-                    backgroundColor: ['#2ecc71', '#f1c40f', '#e67e22', '#9b59b6']
-                }]
-            }
-        });
-    }
-
-    if (comparativoCtx && !presupuesto.chartComparativo) {
-        presupuesto.chartComparativo = new Chart(comparativoCtx, {
-            type: 'line',
-            data: {
-                labels: ['2025', '2026'],
-                datasets: [
-                    {
-                        label: 'Ingresos',
-                        data: [0, 0],
-                        borderColor: '#3498db',
-                        fill: false,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Gastos',
-                        data: [0, 0],
-                        borderColor: '#e74c3c',
-                        fill: false,
-                        tension: 0.4
-                    }
-                ]
-            }
-        });
-    }
-
-    if (topCtx && !presupuesto.chartTopConceptos) {
-        presupuesto.chartTopConceptos = new Chart(topCtx, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Valor (millones)',
-                    data: [],
-                    backgroundColor: '#34495e'
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                scales: {
-                    x: { beginAtZero: true }
-                }
-            }
-        });
-    }
-}
 
 
 
 
-function actualizarGraficos() {
-    // Asegurarse de que los gráficos están inicializados
-    inicializarGraficos();
-    
-    calcularIndicadores(); // Esto ya actualiza las variables de ejecución
 
-    const ingresos2025 = parseFloat(document.getElementById('total-ingresos-2025')?.textContent.replace(/\./g, '')) || 0;
-    const ingresos2026 = Object.values(presupuesto.actualizado.ingresos).reduce((a, b) => a + b, 0);
-    const gastos2025 = parseFloat(document.getElementById('total-gastos-2025')?.textContent.replace(/\./g, '')) || 0;
-    const gastos2026 = Object.values(presupuesto.actualizado.gastos).reduce((a, b) => a + b, 0);
 
-    // Solo actualizar gráficos si existen
-    if (presupuesto.chartEjecucion) {
-        presupuesto.chartEjecucion.data.datasets[0].data = [
-            presupuesto.indicadores.ejecucionIngresos,
-            presupuesto.indicadores.ejecucionGastos
-        ];
-        presupuesto.chartEjecucion.update();
-    }
-
-    if (presupuesto.chartComposicionGastos) {
-        const funcionamiento = Object.entries(presupuesto.actualizado.gastos)
-            .filter(([key]) => key.includes('Servicios') || key.includes('Honorarios') || key.includes('Gastos Generales') || key.includes('Pensiones'))
-            .reduce((sum, [, value]) => sum + value, 0);
-            
-        const inversion = Object.entries(presupuesto.actualizado.gastos)
-            .filter(([key]) => key.includes('Proyecto') || key.includes('Cobertura'))
-            .reduce((sum, [, value]) => sum + value, 0);
-            
-        const otros = gastos2026 - funcionamiento - inversion;
-        
-        presupuesto.chartComposicionGastos.data.datasets[0].data = [
-            funcionamiento,
-            inversion,
-            0, // Deuda (no hay en el ejemplo)
-            otros
-        ];
-        presupuesto.chartComposicionGastos.update();
-    }
-
-    if (presupuesto.chartComparativo) {
-        presupuesto.chartComparativo.data.datasets[0].data = [ingresos2025, ingresos2026];
-        presupuesto.chartComparativo.data.datasets[1].data = [gastos2025, gastos2026];
-        presupuesto.chartComparativo.update();
-    }
-
-    if (presupuesto.chartTopConceptos) {
-        const topGastos = Object.entries(presupuesto.actualizado.gastos)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
-        presupuesto.chartTopConceptos.data.labels = topGastos.map(([k]) => k);
-        presupuesto.chartTopConceptos.data.datasets[0].data = topGastos.map(([, v]) => v);
-        presupuesto.chartTopConceptos.update();
-    }
-
-    // Resto del código para el resumen estadístico...
-}
 
 
 
@@ -1398,68 +1599,7 @@ const exportarProyeccionAPDF = (tableId, titulo, totalBaseId, totalProjId, tipo)
 };
 
 
-    // ========= funciones previas (se mantienen) =========
-    const obtenerChartPorId = (canvasId) => {
-        const chartMapping = {
-            'ejecucionChart': presupuesto.chartEjecucion,
-            'composicionGastosChart': presupuesto.chartComposicionGastos,
-            'comparativoLineChart': presupuesto.chartComparativo,
-            'topConceptosChart': presupuesto.chartTopConceptos
-        };
-        return chartMapping[canvasId];
-    };
 
-    const capturarGraficoComoImagen = async (chartInstance, width = 800) => {
-        return new Promise((resolve) => {
-            const tempCanvas = document.createElement('canvas');
-            const scaleFactor = 2;
-            tempCanvas.width = width * scaleFactor;
-            tempCanvas.height = (chartInstance.height * width * scaleFactor) / chartInstance.width;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.fillStyle = 'white';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            tempCtx.drawImage(chartInstance.canvas, 0, 0, tempCanvas.width, tempCanvas.height);
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.src = tempCanvas.toDataURL('image/png', 1.0);
-        });
-    };
-
-    const agregarGraficoAPDF = async (elementId, titulo) => {
-        checkPageBreak(300);
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.text(titulo, margin, yPos);
-        yPos += 20;
-        
-        try {
-            const chart = obtenerChartPorId(elementId);
-            if (chart) {
-                const img = await capturarGraficoComoImagen(chart, pageWidth);
-                const imgHeight = (img.height * pageWidth) / img.width;
-                if (yPos + imgHeight > pageHeight - margin) {
-                    doc.addPage();
-                    yPos = margin;
-                }
-                doc.addImage(img.src, 'PNG', margin, yPos, pageWidth, imgHeight);
-                yPos += imgHeight + 20;
-                return;
-            }
-            const element = document.getElementById(elementId);
-            if (!element) return;
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const canvas = await html2canvas(element, {
-                scale: 2, logging: false, useCORS: true, backgroundColor: '#FFFFFF', allowTaint: true
-            });
-            const imgData = canvas.toDataURL('image/png');
-            const imgHeight = (canvas.height * pageWidth) / canvas.width;
-            doc.addImage(imgData, 'PNG', margin, yPos, pageWidth, imgHeight);
-            yPos += imgHeight + 20;
-        } catch (error) {
-            console.error(`Error al capturar ${titulo}:`, error);
-            agregarTextoAPDF(`[No se pudo cargar el gráfico: ${titulo}]`, 10);
-        }
-    };
 
     const agregarTablaAPDF = (elementId, titulo) => {
         const element = document.getElementById(elementId);
@@ -1552,15 +1692,12 @@ const exportarProyeccionAPDF = (tableId, titulo, totalBaseId, totalProjId, tipo)
             agregarTextoAPDF(`• Total Gastos 2026: $${fmt(totalGastos)}`);
             agregarTextoAPDF(`• Resultado: ${diferencia >= 0 ? 'Superávit' : 'Déficit'} de $${fmt(Math.abs(diferencia))}`);
 
-            // 3. Gráficos principales
-            await new Promise(resolve => setTimeout(resolve, 300));
-            await agregarGraficoAPDF('ejecucionChart', 'Gráfico 1: Ejecución de Ingresos vs Gastos');
-            await new Promise(resolve => setTimeout(resolve, 300));
-            await agregarGraficoAPDF('composicionGastosChart', 'Gráfico 2: Composición de Gastos');
-            await new Promise(resolve => setTimeout(resolve, 300));
-            await agregarGraficoAPDF('comparativoLineChart', 'Gráfico 3: Comparativo 2025 vs 2026');
-            await new Promise(resolve => setTimeout(resolve, 300));
-            await agregarGraficoAPDF('topConceptosChart', 'Gráfico 4: Top 5 Conceptos de Gasto');
+            // 3. Indicadores calculados
+            agregarTextoAPDF('INDICADORES PRESUPUESTALES', 16, true);
+            agregarTextoAPDF(`• Ejecución de Ingresos: ${presupuesto.indicadores.ejecucionIngresos?.toFixed(2) || 0}%`);
+            agregarTextoAPDF(`• Ejecución de Gastos: ${presupuesto.indicadores.ejecucionGastos?.toFixed(2) || 0}%`);
+            agregarTextoAPDF(`• Relación Funcionamiento: ${presupuesto.indicadores.relacionFuncionamiento?.toFixed(2) || 0}%`);
+            agregarTextoAPDF(`• Dependencia Transferencias: ${presupuesto.indicadores.dependenciaTransferencias?.toFixed(2) || 0}%`);
 
             // 4. Tablas de datos
             agregarTablaAPDF('indicadores-table', 'Tabla 1: Indicadores Presupuestales');
