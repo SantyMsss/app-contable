@@ -327,6 +327,12 @@
 
             <div class="form-group" id="distribucion-gasto" style="display: none;">
                 <label>Distribución del Valor (Debe sumar exactamente el valor ingresado):</label>
+                <div class="info-valor-distribucion" style="background-color: #e9ecef; padding: 10px; margin-bottom: 10px; border-radius: 4px; display: none;">
+                    <strong>Valor a distribuir: <span id="valor-total-distribucion">0</span> millones</strong>
+                    <br>
+                    <span>Suma actual: <span id="suma-actual-distribucion" style="color: #007bff;">0</span> millones</span>
+                    <span id="diferencia-distribucion" style="margin-left: 10px;"></span>
+                </div>
                 <div id="distribucion-contenedor"></div>
                 <div style="margin-top: 10px;">
                     <button type="button" id="agregar-distribucion" class="btn-secundario">+ Añadir línea</button>

@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('area-modificacion').addEventListener('change', actualizarConceptosModificacion);
     document.getElementById('agregar-modificacion').addEventListener('click', agregarModificacion);
     
+    // Eventos para distribución
+    document.getElementById('agregar-distribucion').addEventListener('click', agregarFilaDistribucion);
+    document.getElementById('guardar-distribucion').addEventListener('click', guardarDistribucion);
+    
     // Eventos para análisis
     document.getElementById('guardar-analisis').addEventListener('click', guardarAnalisis);
     
@@ -88,6 +92,24 @@ document.addEventListener('click', function (e) {
             // Recalcular proyecciones y totales sin ese concepto
             calcularProyeccion();
         }
+    }
+    
+    // Eliminar filas de distribución
+    if (e.target.classList.contains('btn-eliminar-fila-distribucion')) {
+        e.target.parentElement.remove();
+        actualizarSumaDistribucion();
+    }
+    
+    // Actualizar suma cuando cambian los valores de distribución
+    if (e.target.classList.contains('valor-distribucion')) {
+        actualizarSumaDistribucion();
+    }
+});
+
+// Event listener para cambios en tiempo real en los inputs de distribución
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('valor-distribucion')) {
+        actualizarSumaDistribucion();
     }
 });
 
@@ -513,18 +535,8 @@ function agregarModificacion() {
     
     // Para adiciones y reducciones de ingresos, mostrar sistema de distribución en gastos
     if ((tipo === 'adicion' || tipo === 'reduccion') && area === 'ingresos') {
-        // Limpiar formulario
-        document.getElementById('tipo-modificacion').value = '';
-        document.getElementById('area-modificacion').value = '';
-        document.getElementById('concepto-modificacion').value = '';
-        document.getElementById('valor-modificacion').value = '';
-        document.getElementById('justificacion-modificacion').value = '';
-
-        if (tipo === 'adicion') {
-            mostrarDistribucionIngreso(valor, concepto, justificacion, 'adicion');
-        } else if (tipo === 'reduccion') {
-            mostrarDistribucionIngreso(valor, concepto, justificacion, 'reduccion');
-        }
+        // No limpiar formulario aún, mostrar distribución
+        mostrarDistribucionIngreso(valor, concepto, justificacion, tipo);
         return;
     }
     
@@ -555,123 +567,6 @@ function agregarModificacion() {
     // Limpiar formulario
     document.getElementById('valor-modificacion').value = '';
     document.getElementById('justificacion-modificacion').value = '';
-
-        if (tipo === 'adicion') {
-        mostrarDistribucion(valor, area);
-    } else if (tipo === 'reduccion') {
-        mostrarDistribucionReduccion(valor, area);
-    }
-
-        function mostrarDistribucion(valor, areaOrigen) {
-        const contenedor = document.getElementById('distribucion-contenedor');
-        const seccion = document.getElementById('distribucion-gasto');
-        const etiqueta = seccion.querySelector('label');
-        contenedor.innerHTML = '';
-        seccion.style.display = 'block';
-        seccion.setAttribute('data-valor-total', valor);
-        seccion.setAttribute('data-area-origen', areaOrigen);
-        seccion.setAttribute('data-tipo-operacion', 'adicion');
-
-        // Actualizar texto de la etiqueta
-        etiqueta.textContent = 'Distribución de la Adición (Debe sumar exactamente el valor ingresado):';
-
-        const conceptos = Object.keys(presupuesto.proyeccion.ingresos); // distribuir a ingresos para adiciones
-        agregarFilaDistribucion(conceptos);
-    }
-
-    function mostrarDistribucionReduccion(valor, areaOrigen) {
-        const contenedor = document.getElementById('distribucion-contenedor');
-        const seccion = document.getElementById('distribucion-gasto');
-        const etiqueta = seccion.querySelector('label');
-        contenedor.innerHTML = '';
-        seccion.style.display = 'block';
-        seccion.setAttribute('data-valor-total', valor);
-        seccion.setAttribute('data-area-origen', areaOrigen);
-        seccion.setAttribute('data-tipo-operacion', 'reduccion');
-
-        // Actualizar texto de la etiqueta
-        etiqueta.textContent = 'Distribución de la Reducción (Debe sumar exactamente el valor ingresado):';
-
-        const conceptos = Object.keys(presupuesto.proyeccion.ingresos); // distribuir reducciones desde ingresos
-        agregarFilaDistribucion(conceptos);
-    }
-
-    function agregarFilaDistribucion(conceptos) {
-        const contenedor = document.getElementById('distribucion-contenedor');
-        const fila = document.createElement('div');
-        fila.classList.add('fila-distribucion');
-
-        fila.innerHTML = `
-            <select class="concepto-distribucion">
-                ${conceptos.map(c => `<option value="${c}">${c}</option>`).join('')}
-            </select>
-            <input type="number" class="valor-distribucion" min="0" placeholder="Valor (millones)">
-            <button type="button" class="btn-eliminar-fila-distribucion">X</button>
-        `;
-
-        contenedor.appendChild(fila);
-    }
-
-        document.getElementById('agregar-distribucion').addEventListener('click', () => {
-        // Verificar si es distribución de ingresos en gastos o distribución normal
-        const conceptoIngreso = document.getElementById('distribucion-gasto').getAttribute('data-concepto-ingreso');
-        
-        if (conceptoIngreso) {
-            // Es distribución de ingresos en gastos
-            const conceptosGasto = Object.keys(presupuesto.proyeccion.gastos);
-            agregarFilaDistribucionGasto(conceptosGasto);
-        } else {
-            // Es distribución normal (ingresos en ingresos)
-            const conceptos = Object.keys(presupuesto.proyeccion.ingresos);
-            agregarFilaDistribucion(conceptos);
-        }
-    });
-
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('btn-eliminar-fila-distribucion')) {
-            e.target.parentElement.remove();
-        }
-    });
-
-    document.getElementById('guardar-distribucion').addEventListener('click', () => {
-    const totalEsperado = parseFloat(document.getElementById('distribucion-gasto').getAttribute('data-valor-total'));
-    const areaOrigen = document.getElementById('distribucion-gasto').getAttribute('data-area-origen');
-    const tipoOperacion = document.getElementById('distribucion-gasto').getAttribute('data-tipo-operacion');
-    const filas = document.querySelectorAll('.fila-distribucion');
-
-    let sumaDistribucion = 0;
-    const distribuciones = [];
-
-    filas.forEach(fila => {
-        const concepto = fila.querySelector('.concepto-distribucion').value;
-        const valor = parseFloat(fila.querySelector('.valor-distribucion').value) || 0;
-        sumaDistribucion += valor;
-        distribuciones.push({ concepto, valor });
-    });
-
-    if (sumaDistribucion !== totalEsperado) {
-        mostrarMensaje(`La suma de la distribución (${formatNumber(sumaDistribucion)}) debe ser igual al valor original (${formatNumber(totalEsperado)}).`, 'danger');
-        return;
-    }
-
-    // Aplicar al presupuesto actualizado según el tipo de operación
-    distribuciones.forEach(d => {
-        if (tipoOperacion === 'adicion') {
-            presupuesto.actualizado.ingresos[d.concepto] = (presupuesto.actualizado.ingresos[d.concepto] || 0) + d.valor;
-        } else if (tipoOperacion === 'reduccion') {
-            presupuesto.actualizado.ingresos[d.concepto] = Math.max(0, (presupuesto.actualizado.ingresos[d.concepto] || 0) - d.valor);
-        }
-    });
-
-    actualizarPresupuestoActualizado();
-    const mensajeOperacion = tipoOperacion === 'adicion' ? 'Distribución aplicada correctamente.' : 'Distribución de reducción aplicada correctamente.';
-    mostrarMensaje(mensajeOperacion, 'success');
-
-    // Limpiar UI
-    document.getElementById('distribucion-gasto').style.display = 'none';
-    document.getElementById('distribucion-contenedor').innerHTML = '';
-});
-
 }
 
 // Nueva función para distribución de modificaciones de ingresos en gastos
@@ -679,8 +574,14 @@ function mostrarDistribucionIngreso(valor, conceptoIngreso, justificacion, tipoO
     const contenedor = document.getElementById('distribucion-contenedor');
     const seccion = document.getElementById('distribucion-gasto');
     const etiqueta = seccion.querySelector('label');
+    const infoValor = seccion.querySelector('.info-valor-distribucion');
+    const spanValor = document.getElementById('valor-total-distribucion');
+    
     contenedor.innerHTML = '';
     seccion.style.display = 'block';
+    infoValor.style.display = 'block';
+    spanValor.textContent = formatNumber(valor);
+    
     seccion.setAttribute('data-valor-total', valor);
     seccion.setAttribute('data-concepto-ingreso', conceptoIngreso);
     seccion.setAttribute('data-justificacion', justificacion);
@@ -690,11 +591,50 @@ function mostrarDistribucionIngreso(valor, conceptoIngreso, justificacion, tipoO
     etiqueta.textContent = `Distribución de la ${tipoOperacion.charAt(0).toUpperCase() + tipoOperacion.slice(1)} en Gastos (Debe sumar exactamente el valor ingresado):`;
 
     const conceptosGasto = Object.keys(presupuesto.proyeccion.gastos);
+    
+    // Agregar primera fila inicial
     agregarFilaDistribucionGasto(conceptosGasto);
+}
 
-    // Modificar el event listener del botón guardar para manejar distribución en gastos
-    const botonGuardar = document.getElementById('guardar-distribucion');
-    botonGuardar.onclick = guardarDistribucionIngreso;
+// Funciones para manejar la distribución
+function agregarFilaDistribucion() {
+    const contenedor = document.getElementById('distribucion-contenedor');
+    const conceptoIngreso = document.getElementById('distribucion-gasto').getAttribute('data-concepto-ingreso');
+    
+    let conceptos;
+    if (conceptoIngreso) {
+        // Es distribución de ingresos en gastos
+        conceptos = Object.keys(presupuesto.proyeccion.gastos);
+        agregarFilaDistribucionGasto(conceptos);
+    } else {
+        // Es distribución normal (gastos en gastos)
+        conceptos = Object.keys(presupuesto.proyeccion.gastos);
+        const fila = document.createElement('div');
+        fila.classList.add('fila-distribucion');
+
+        fila.innerHTML = `
+            <select class="concepto-distribucion">
+                ${conceptos.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+            <input type="number" class="valor-distribucion" min="0" placeholder="Valor (millones)">
+            <button type="button" class="btn-eliminar-fila-distribucion">✖</button>
+        `;
+
+        contenedor.appendChild(fila);
+        actualizarSumaDistribucion();
+    }
+}
+
+function guardarDistribucion() {
+    const conceptoIngreso = document.getElementById('distribucion-gasto').getAttribute('data-concepto-ingreso');
+    
+    if (conceptoIngreso) {
+        // Es distribución de ingresos en gastos
+        guardarDistribucionIngreso();
+    } else {
+        // Es distribución normal (no implementada aún)
+        mostrarMensaje('Tipo de distribución no implementado', 'danger');
+    }
 }
 
 function agregarFilaDistribucionGasto(conceptos) {
@@ -711,6 +651,40 @@ function agregarFilaDistribucionGasto(conceptos) {
     `;
 
     contenedor.appendChild(fila);
+    
+    // Actualizar suma después de agregar nueva fila
+    actualizarSumaDistribucion();
+}
+
+// Función para actualizar la suma en tiempo real
+function actualizarSumaDistribucion() {
+    const valorTotal = parseFloat(document.getElementById('distribucion-gasto').getAttribute('data-valor-total')) || 0;
+    const filas = document.querySelectorAll('.fila-distribucion');
+    let sumaActual = 0;
+    
+    filas.forEach(fila => {
+        const valor = parseFloat(fila.querySelector('.valor-distribucion').value) || 0;
+        sumaActual += valor;
+    });
+    
+    const sumaSpan = document.getElementById('suma-actual-distribucion');
+    const diferenciaSpan = document.getElementById('diferencia-distribucion');
+    
+    if (sumaSpan) {
+        sumaSpan.textContent = formatNumber(sumaActual);
+        
+        const diferencia = valorTotal - sumaActual;
+        if (Math.abs(diferencia) < 0.01) {
+            diferenciaSpan.textContent = '✓ ¡Correcto!';
+            diferenciaSpan.style.color = '#28a745';
+        } else if (diferencia > 0) {
+            diferenciaSpan.textContent = `(Faltan ${formatNumber(diferencia)} millones)`;
+            diferenciaSpan.style.color = '#dc3545';
+        } else {
+            diferenciaSpan.textContent = `(Sobran ${formatNumber(Math.abs(diferencia))} millones)`;
+            diferenciaSpan.style.color = '#dc3545';
+        }
+    }
 }
 
 function guardarDistribucionIngreso() {
@@ -795,6 +769,7 @@ function guardarDistribucionIngreso() {
 
     // Limpiar UI
     document.getElementById('distribucion-gasto').style.display = 'none';
+    document.querySelector('.info-valor-distribucion').style.display = 'none';
     document.getElementById('distribucion-contenedor').innerHTML = '';
     limpiarFormulario();
 }
@@ -809,6 +784,17 @@ function limpiarFormulario() {
     
     // Ocultar grupo de concepto destino
     document.getElementById('concepto-destino-group').style.display = 'none';
+    
+    // Ocultar distribución si está visible
+    const distribucionSection = document.getElementById('distribucion-gasto');
+    if (distribucionSection.style.display !== 'none') {
+        distribucionSection.style.display = 'none';
+        document.querySelector('.info-valor-distribucion').style.display = 'none';
+        document.getElementById('distribucion-contenedor').innerHTML = '';
+    }
+    
+    // Habilitar área de modificación si estaba deshabilitada
+    document.getElementById('area-modificacion').disabled = false;
 }
 
 function actualizarTablas() {
