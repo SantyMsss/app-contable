@@ -492,8 +492,25 @@ function agregarModificacion() {
     const valor = parseFloat(document.getElementById('valor-modificacion').value) || 0;
     const justificacion = document.getElementById('justificacion-modificacion').value;
     
-    if (!concepto || valor <= 0) {
-        mostrarMensaje('Complete todos los campos requeridos', 'danger');
+    // Validación mejorada de campos
+    if (!tipo) {
+        mostrarMensaje('Debe seleccionar un tipo de modificación', 'warning');
+        return;
+    }
+    if (!area) {
+        mostrarMensaje('Debe seleccionar un área (Ingresos o Gastos)', 'warning');
+        return;
+    }
+    if (!concepto) {
+        mostrarMensaje('Debe seleccionar un concepto', 'warning');
+        return;
+    }
+    if (valor <= 0) {
+        mostrarMensaje('Debe ingresar un valor mayor a cero', 'warning');
+        return;
+    }
+    if (!justificacion.trim()) {
+        mostrarMensaje('Debe ingresar una justificación para la modificación', 'warning');
         return;
     }
 
@@ -528,7 +545,7 @@ function agregarModificacion() {
         presupuesto.modificaciones.push(modificacion);
         aplicarModificacion(modificacion);
         actualizarTablas();
-        limpiarFormulario();
+        resetearFormularioCompleto();
         mostrarMensaje('Traslado aplicado correctamente', 'success');
         return;
     }
@@ -555,7 +572,7 @@ function agregarModificacion() {
     presupuesto.modificaciones.push(modificacion);
     aplicarModificacion(modificacion);
     actualizarTablas();
-    limpiarFormulario();
+    resetearFormularioCompleto();
     mostrarMensaje('Modificación aplicada correctamente', 'success');
     
     // Actualizar tabla de modificaciones
@@ -658,19 +675,29 @@ function agregarFilaDistribucionGasto(conceptos) {
 
 // Función para actualizar la suma en tiempo real
 function actualizarSumaDistribucion() {
-    const valorTotal = parseFloat(document.getElementById('distribucion-gasto').getAttribute('data-valor-total')) || 0;
+    const seccionDistribucion = document.getElementById('distribucion-gasto');
+    
+    // Verificar que la sección de distribución esté visible
+    if (!seccionDistribucion || seccionDistribucion.style.display === 'none') {
+        return;
+    }
+    
+    const valorTotal = parseFloat(seccionDistribucion.getAttribute('data-valor-total')) || 0;
     const filas = document.querySelectorAll('.fila-distribucion');
     let sumaActual = 0;
     
     filas.forEach(fila => {
-        const valor = parseFloat(fila.querySelector('.valor-distribucion').value) || 0;
-        sumaActual += valor;
+        const valorInput = fila.querySelector('.valor-distribucion');
+        if (valorInput) {
+            const valor = parseFloat(valorInput.value) || 0;
+            sumaActual += valor;
+        }
     });
     
     const sumaSpan = document.getElementById('suma-actual-distribucion');
     const diferenciaSpan = document.getElementById('diferencia-distribucion');
     
-    if (sumaSpan) {
+    if (sumaSpan && diferenciaSpan) {
         sumaSpan.textContent = formatNumber(sumaActual);
         
         const diferencia = valorTotal - sumaActual;
@@ -767,14 +794,16 @@ function guardarDistribucionIngreso() {
         'Reducción distribuida correctamente en gastos para mantener equilibrio';
     mostrarMensaje(mensajeOperacion, 'success');
 
-    // Limpiar UI
-    document.getElementById('distribucion-gasto').style.display = 'none';
-    document.querySelector('.info-valor-distribucion').style.display = 'none';
-    document.getElementById('distribucion-contenedor').innerHTML = '';
-    limpiarFormulario();
+    // Limpiar UI de distribución ANTES del reset
+    ocultarSeccionDistribucion();
+    
+    // Resetear formulario completamente para distribución
+    resetearFormularioPostDistribucion();
 }
 
-function limpiarFormulario() {
+// Función específica para reset después de distribución exitosa
+function resetearFormularioPostDistribucion() {
+    // Limpiar formulario sin manejar distribución (ya se hizo)
     document.getElementById('tipo-modificacion').value = '';
     document.getElementById('area-modificacion').value = '';
     document.getElementById('concepto-modificacion').value = '';
@@ -782,24 +811,99 @@ function limpiarFormulario() {
     document.getElementById('valor-modificacion').value = '';
     document.getElementById('justificacion-modificacion').value = '';
     
+    // Limpiar las listas de conceptos
+    document.getElementById('concepto-modificacion').innerHTML = '';
+    document.getElementById('concepto-destino').innerHTML = '';
+    
     // Ocultar grupo de concepto destino
     document.getElementById('concepto-destino-group').style.display = 'none';
     
-    // Ocultar distribución si está visible
+    // Habilitar área de modificación
+    document.getElementById('area-modificacion').disabled = false;
+    
+    // Actualizar contador
+    actualizarContadorModificaciones();
+    
+    // Mensaje específico para distribución
+    mostrarMensaje('✅ Distribución registrada correctamente. Formulario listo para nueva modificación.', 'success');
+}
+
+// Función específica para ocultar la sección de distribución
+function ocultarSeccionDistribucion() {
     const distribucionSection = document.getElementById('distribucion-gasto');
-    if (distribucionSection.style.display !== 'none') {
+    const infoValor = document.querySelector('.info-valor-distribucion');
+    const contenedor = document.getElementById('distribucion-contenedor');
+    
+    if (distribucionSection) {
         distribucionSection.style.display = 'none';
-        document.querySelector('.info-valor-distribucion').style.display = 'none';
-        document.getElementById('distribucion-contenedor').innerHTML = '';
+    }
+    if (infoValor) {
+        infoValor.style.display = 'none';
+    }
+    if (contenedor) {
+        contenedor.innerHTML = '';
+    }
+    
+    // Limpiar valores de distribución de forma segura
+    const valorTotal = document.getElementById('valor-total-distribucion');
+    const sumaActual = document.getElementById('suma-actual-distribucion');
+    const diferencia = document.getElementById('diferencia-distribucion');
+    
+    if (valorTotal) valorTotal.textContent = '0';
+    if (sumaActual) sumaActual.textContent = '0';
+    if (diferencia) diferencia.textContent = '';
+}
+
+function limpiarFormulario() {
+    // Limpiar todos los campos del formulario
+    document.getElementById('tipo-modificacion').value = '';
+    document.getElementById('area-modificacion').value = '';
+    document.getElementById('concepto-modificacion').value = '';
+    document.getElementById('concepto-destino').value = '';
+    document.getElementById('valor-modificacion').value = '';
+    document.getElementById('justificacion-modificacion').value = '';
+    
+    // Limpiar las listas de conceptos
+    document.getElementById('concepto-modificacion').innerHTML = '';
+    document.getElementById('concepto-destino').innerHTML = '';
+    
+    // Ocultar grupo de concepto destino
+    document.getElementById('concepto-destino-group').style.display = 'none';
+    
+    // Solo manejar distribución si NO está siendo manejada por otra función
+    const distribucionSection = document.getElementById('distribucion-gasto');
+    if (distribucionSection && distribucionSection.style.display !== 'none') {
+        ocultarSeccionDistribucion();
     }
     
     // Habilitar área de modificación si estaba deshabilitada
     document.getElementById('area-modificacion').disabled = false;
 }
 
+// Nueva función para reset completo después de operación exitosa
+function resetearFormularioCompleto() {
+    // Llamar a limpiar formulario (que ya maneja la distribución inteligentemente)
+    limpiarFormulario();
+    
+    // Actualizar contador de modificaciones
+    actualizarContadorModificaciones();
+    
+    // Mostrar mensaje de que se puede agregar otra modificación (sin delay para distribuciones)
+    mostrarMensaje('✅ Modificación guardada. Puede agregar otra modificación.', 'info');
+}
+
+// Función para actualizar el contador de modificaciones
+function actualizarContadorModificaciones() {
+    const contador = document.getElementById('contador-mods');
+    if (contador) {
+        contador.textContent = presupuesto.modificaciones.length;
+    }
+}
+
 function actualizarTablas() {
     actualizarPresupuestoActualizado();
     actualizarTablaModificaciones();
+    actualizarContadorModificaciones();
     calcularIndicadores();
     mostrarEquilibrio();
 }
@@ -886,6 +990,7 @@ function eliminarModificacion(id) {
         // Actualizar tablas
         actualizarTablaModificaciones();
         actualizarPresupuestoActualizado();
+        actualizarContadorModificaciones();
         
         mostrarMensaje('Modificación eliminada correctamente', 'success');
     }
@@ -1384,6 +1489,7 @@ function cargarDatosEjemplo() {
     
     actualizarTablaModificaciones();
     actualizarPresupuestoActualizado();
+    actualizarContadorModificaciones();
     
     // Simular datos de ejecución
     presupuesto.ejecucion = {
