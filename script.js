@@ -456,9 +456,136 @@ function actualizarTotales() {
     }
     document.getElementById('total-gastos-2026').textContent = formatNumber(totalGastos2026);
     
+    // Calcular subtotales por categoría
+    calcularSubtotalesCategorias();
+    
     // Inicializar presupuesto actualizado con la proyección
     presupuesto.actualizado.ingresos = JSON.parse(JSON.stringify(presupuesto.proyeccion.ingresos));
     presupuesto.actualizado.gastos = JSON.parse(JSON.stringify(presupuesto.proyeccion.gastos));
+}
+
+function calcularSubtotalesCategorias() {
+    // Ingresos Tributarios
+    let subtotalTributarios = 
+        (parseFloat(document.getElementById('predial-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('industria-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('tasa-vias-2026')?.textContent.replace(/\./g, '')) || 0);
+    
+    // Agregar dinámicos de tributarios
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="tributarios"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalTributarios += valor;
+    });
+    
+    if (document.getElementById('subtotal-tributarios')) {
+        document.getElementById('subtotal-tributarios').textContent = formatNumber(subtotalTributarios);
+    }
+    
+    // Ingresos No Tributarios
+    let subtotalNoTributarios = 
+        (parseFloat(document.getElementById('venta-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('otros-no-trib-2026')?.textContent.replace(/\./g, '')) || 0);
+    
+    // Agregar dinámicos de no-tributarios
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="no-tributarios"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalNoTributarios += valor;
+    });
+    
+    if (document.getElementById('subtotal-no-tributarios')) {
+        document.getElementById('subtotal-no-tributarios').textContent = formatNumber(subtotalNoTributarios);
+    }
+    
+    // Transferencias (Ingresos)
+    let subtotalTransferenciasIngreso = 
+        (parseFloat(document.getElementById('sgp-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('fonpet-2026')?.textContent.replace(/\./g, '')) || 0);
+    
+    // Agregar dinámicos de transferencias
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="transferencias"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalTransferenciasIngreso += valor;
+    });
+    
+    if (document.getElementById('subtotal-transferencias-ingreso')) {
+        document.getElementById('subtotal-transferencias-ingreso').textContent = formatNumber(subtotalTransferenciasIngreso);
+    }
+    
+    // Recursos de Capital
+    let subtotalRecursosCapital = 
+        (parseFloat(document.getElementById('credito-findeter-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('credito-enterritorio-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('donacion-alemana-2026')?.textContent.replace(/\./g, '')) || 0);
+    
+    // Agregar dinámicos de recursos-capital
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="recursos-capital"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalRecursosCapital += valor;
+    });
+    
+    if (document.getElementById('subtotal-recursos-capital')) {
+        document.getElementById('subtotal-recursos-capital').textContent = formatNumber(subtotalRecursosCapital);
+    }
+    
+    // Gastos de Funcionamiento
+    let subtotalFuncionamiento = 
+        (parseFloat(document.getElementById('serv-personales-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('honorarios-concejales-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('gastos-generales-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('sistematizacion-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('contribuciones-nomina-2026')?.textContent.replace(/\./g, '')) || 0);
+    
+    // Agregar dinámicos de funcionamiento
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="funcionamiento"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalFuncionamiento += valor;
+    });
+    
+    if (document.getElementById('subtotal-funcionamiento')) {
+        document.getElementById('subtotal-funcionamiento').textContent = formatNumber(subtotalFuncionamiento);
+    }
+    
+    // Transferencias (Gastos)
+    let subtotalTransferenciasGasto = 
+        (parseFloat(document.getElementById('fondo-deporte-cultura-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('fondo-salud-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('concejo-municipal-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('personeria-municipal-2026')?.textContent.replace(/\./g, '')) || 0);
+    
+    // Agregar dinámicos de transferencias-gastos
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="transferencias-gastos"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalTransferenciasGasto += valor;
+    });
+    
+    if (document.getElementById('subtotal-transferencias-gasto')) {
+        document.getElementById('subtotal-transferencias-gasto').textContent = formatNumber(subtotalTransferenciasGasto);
+    }
+    
+    // Gastos de Inversión
+    let subtotalInversion = 
+        (parseFloat(document.getElementById('proyecto1-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('proyecto2-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('proyecto3-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('proyecto4-2026')?.textContent.replace(/\./g, '')) || 0) +
+        (parseFloat(document.getElementById('cobertura-salud-2026')?.textContent.replace(/\./g, '')) || 0);
+    
+    // Agregar dinámicos de inversión
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="inversion"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalInversion += valor;
+    });
+    
+    if (document.getElementById('subtotal-inversion')) {
+        document.getElementById('subtotal-inversion').textContent = formatNumber(subtotalInversion);
+    }
 }
 
 function verificarEquilibrio() {

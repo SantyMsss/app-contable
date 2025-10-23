@@ -158,6 +158,18 @@ footer {
     font-weight: bold;
 }
 
+.subtotal-categoria {
+    text-align: right !important;
+    padding-right: 1rem !important;
+    background-color: #f0f0f0 !important;
+}
+
+.subtotal-value {
+    color: #e74c3c !important;
+    font-weight: bold !important;
+    font-size: 1.1rem;
+}
+
 .total {
     background-color: #e0e0e0;
     font-weight: bold;
