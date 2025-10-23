@@ -48,24 +48,6 @@
                             <td colspan="3"><strong>Ingresos Tributarios</strong></td>
                             <td class="subtotal-categoria"><span id="subtotal-tributarios" class="subtotal-value">0</span></td>
                         </tr>
-                        <tr>
-                            <td>Impuesto Predial</td>
-                            <td><input type="number" id="predial-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-predial" value="50.2"></td>
-                            <td><span id="predial-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Impuesto de Industria y Comercio</td>
-                            <td><input type="number" id="industria-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-industria" value="50.2"></td>
-                            <td><span id="industria-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Tasa por Ocupación de Vías (Nuevo)</td>
-                            <td><input type="number" id="tasa-vias-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-tasa-vias" value="0"></td>
-                            <td><span id="tasa-vias-2026" class="calculated">0</span></td>
-                        </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
                                 <button type="button" class="agregar-item-btn" data-categoria="tributarios">AGREGAR</button>
@@ -76,18 +58,6 @@
                         <tr class="category">
                             <td colspan="3"><strong>Ingresos No Tributarios</strong></td>
                             <td class="subtotal-categoria"><span id="subtotal-no-tributarios" class="subtotal-value">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Venta de Bienes y Servicios</td>
-                            <td><input type="number" id="venta-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-venta" value="80"></td>
-                            <td><span id="venta-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Otros Ingresos No Tributarios</td>
-                            <td><input type="number" id="otros-no-trib-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-otros-no-trib" value="60"></td>
-                            <td><span id="otros-no-trib-2026" class="calculated">0</span></td>
                         </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
@@ -100,54 +70,75 @@
                             <td colspan="3"><strong>Transferencias</strong></td>
                             <td class="subtotal-categoria"><span id="subtotal-transferencias-ingreso" class="subtotal-value">0</span></td>
                         </tr>
-                        <tr>
-                            <td>SGP - Propósito General</td>
-                            <td><input type="number" id="sgp-2024" class="base-input" value="0"></td>
-                            <td>
-                                <input type="number" id="crec-sgp-input" value="13" class="tasa-crecimiento-input">
-                            </td>
-                            <td><span id="sgp-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>FONPET</td>
-                            <td><input type="number" id="fonpet-2023" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-fonpet" value="20"></td>
-                            <td><span id="fonpet-2026" class="calculated">0</span></td>
-                        </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
                                 <button type="button" class="agregar-item-btn" data-categoria="transferencias">AGREGAR</button>
                             </td>
                         </tr>
                         
-                        <!-- Recursos de Capital -->
+                        <!-- Recursos del Crédito -->
                         <tr class="category">
-                            <td colspan="3"><strong>Recursos de Capital</strong></td>
-                            <td class="subtotal-categoria"><span id="subtotal-recursos-capital" class="subtotal-value">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Crédito FINDETER EXTERNO</td>
-                            <td><input type="number" id="credito-findeter-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-credito-findeter" value="0"></td>
-                            <td><span id="credito-findeter-2026" class="calculated">0</span></td>
-                        </tr>
-
-                        <tr>
-                            <td>Crédito ENTerritorio</td>
-                            <td><input type="number" id="credito-enterritorio-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-credito-enterritorio" value="0"></td>
-                            <td><span id="credito-enterritorio-2026" class="calculated">0</span></td>
-                        </tr>
-
-                        <tr>
-                            <td>Donación Gobierno Alemán</td>
-                            <td><input type="number" id="donacion-alemana-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-donacion-alemana" value="0"></td>
-                            <td><span id="donacion-alemana-2026" class="calculated">0</span></td>
+                            <td colspan="3"><strong>Recursos del Crédito</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-recursos-credito" class="subtotal-value">0</span></td>
                         </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
-                                <button type="button" class="agregar-item-btn" data-categoria="recursos-capital">AGREGAR</button>
+                                <button type="button" class="agregar-item-btn" data-categoria="recursos-credito">AGREGAR</button>
+                            </td>
+                        </tr>
+
+                        <!-- Recursos del Balance -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Recursos del Balance</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-recursos-balance" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="recursos-balance">AGREGAR</button>
+                            </td>
+                        </tr>
+
+                        <!-- Excedentes Financieros -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Excedentes Financieros</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-excedentes-financieros" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="excedentes-financieros">AGREGAR</button>
+                            </td>
+                        </tr>
+
+                        <!-- Rendimientos Financieros -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Rendimientos Financieros</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-rendimientos-financieros" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="rendimientos-financieros">AGREGAR</button>
+                            </td>
+                        </tr>
+
+                        <!-- Venta de Activos -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Venta de Activos</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-venta-activos" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="venta-activos">AGREGAR</button>
+                            </td>
+                        </tr>
+
+                        <!-- Donaciones -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Donación Gobierno Alemán</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-donaciones" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="donaciones">AGREGAR</button>
                             </td>
                         </tr>
 
@@ -179,36 +170,6 @@
                             <td colspan="3"><strong>Gastos de Funcionamiento</strong></td>
                             <td class="subtotal-categoria"><span id="subtotal-funcionamiento" class="subtotal-value">0</span></td>
                         </tr>
-                        <tr>
-                            <td>Servicios Personales</td>
-                            <td><input type="number" id="serv-personales-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-serv-personales" value="14" max="14"></td>
-                            <td><span id="serv-personales-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Honorarios Concejales</td>
-                            <td><input type="number" id="honorarios-concejales-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-honorarios-concejales" value="0"></td>
-                            <td><span id="honorarios-concejales-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Gastos Generales</td>
-                            <td><input type="number" id="gastos-generales-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-gastos-generales" value="8"></td>
-                            <td><span id="gastos-generales-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Sistematización</td>
-                            <td><input type="number" id="sistematizacion-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-sistematizacion" value="0"></td>
-                            <td><span id="sistematizacion-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Contribuciones Nómina</td>
-                            <td><input type="number" id="contribuciones-nomina-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-contribuciones-nomina" value="0"></td>
-                            <td><span id="contribuciones-nomina-2026" class="calculated">0</span></td>
-                        </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
                                 <button type="button" class="agregar-item-btn" data-categoria="funcionamiento">AGREGAR</button>
@@ -220,33 +181,6 @@
                             <td colspan="3"><strong>Transferencias</strong></td>
                             <td class="subtotal-categoria"><span id="subtotal-transferencias-gasto" class="subtotal-value">0</span></td>
                         </tr>
-                        <tr>
-                            <td>Fondo Local Deporte y Cultura</td>
-                            <td><input type="number" id="fondo-deporte-cultura-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-fondo-deporte-cultura" value="0"></td>
-                            <td><span id="fondo-deporte-cultura-2026" class="calculated">0</span></td>
-                        </tr>
-
-                        <tr>
-                            <td>Fondo Local de Salud</td>
-                            <td><input type="number" id="fondo-salud-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-fondo-salud" value="0"></td>
-                            <td><span id="fondo-salud-2026" class="calculated">0</span></td>
-                        </tr>
-
-                        <tr>
-                            <td>Concejo Municipal</td>
-                            <td><input type="number" id="concejo-municipal-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-concejo-municipal" value="0"></td>
-                            <td><span id="concejo-municipal-2026" class="calculated">0</span></td>
-                        </tr>
-
-                        <tr>
-                            <td>Personería Municipal</td>
-                            <td><input type="number" id="personeria-municipal-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-personeria-municipal" value="0"></td>
-                            <td><span id="personeria-municipal-2026" class="calculated">0</span></td>
-                        </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
                                 <button type="button" class="agregar-item-btn" data-categoria="transferencias-gastos">AGREGAR</button>
@@ -257,36 +191,6 @@
                         <tr class="category">
                             <td colspan="3"><strong>Gastos de Inversión</strong></td>
                             <td class="subtotal-categoria"><span id="subtotal-inversion" class="subtotal-value">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Proyecto 1</td>
-                            <td><input type="number" id="proyecto1-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-proyecto1" value="20"></td>
-                            <td><span id="proyecto1-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Proyecto 2</td>
-                            <td><input type="number" id="proyecto2-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-proyecto2" value="24"></td>
-                            <td><span id="proyecto2-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Proyecto 3</td>
-                            <td><input type="number" id="proyecto3-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-proyecto3" value="36"></td>
-                            <td><span id="proyecto3-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Proyecto 4</td>
-                            <td><input type="number" id="proyecto4-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-proyecto4" value="20"></td>
-                            <td><span id="proyecto4-2026" class="calculated">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>Cobertura Salud</td>
-                            <td><input type="number" id="cobertura-salud-2025" class="base-input" value="0"></td>
-                            <td><input type="number" id="crec-cobertura-salud" value="0"></td>
-                            <td><span id="cobertura-salud-2026" class="calculated">0</span></td>
                         </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
@@ -522,7 +426,7 @@
             
             <div class="form-group">
                 <label for="analisis-texto">Análisis:</label>
-                <textarea id="analisis-texto" class="form-control" rows="10" placeholder="Escriba aquí su análisis..."></textarea>
+                <textarea id="analisis-texto" class="form-control" rows="15" placeholder="Escriba aquí su análisis..."></textarea>
             </div>
             
             <button id="guardar-analisis">Guardar Análisis</button>

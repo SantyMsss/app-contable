@@ -246,199 +246,57 @@ function calcularProyeccion() {
 function calcularIngresos() {
     presupuesto.proyeccion.ingresos = {};
     
-    // Ingresos Tributarios
-    const predial2025 = parseFloat(document.getElementById('predial-2025').value) || 0;
-    const crecimientoPredial = parseFloat(document.getElementById('crec-predial').value) || 0;
-    const predial2026 = predial2025 * (1 + crecimientoPredial / 100);
-    document.getElementById('predial-2026').textContent = formatNumber(predial2026);
-    presupuesto.proyeccion.ingresos['Impuesto Predial'] = predial2026;
+    // Solo procesar ingresos dinámicos agregados por el usuario
+    let totalBase2025 = 0;
     
-    const industria2025 = parseFloat(document.getElementById('industria-2025').value) || 0;
-    const crecimientoIndustria = parseFloat(document.getElementById('crec-industria').value) || 0;
-    const industria2026 = industria2025 * (1 + crecimientoIndustria / 100);
-    document.getElementById('industria-2026').textContent = formatNumber(industria2026);
-    presupuesto.proyeccion.ingresos['Impuesto Industria y Comercio'] = industria2026;
-    
-    const tasaVias2025 = parseFloat(document.getElementById('tasa-vias-2025').value) || 0;
-    const crecTasaVias = parseFloat(document.getElementById('crec-tasa-vias').value) || 0;
-    const tasaVias2026 = tasaVias2025 * (1 + crecTasaVias / 100);
-    document.getElementById('tasa-vias-2026').textContent = formatNumber(tasaVias2026);
-    presupuesto.proyeccion.ingresos['Tasa por Ocupación de Vías'] = tasaVias2026;
-    
-    // Ingresos No Tributarios
-    const venta2025 = parseFloat(document.getElementById('venta-2025').value) || 0;
-    const crecimientoVenta = parseFloat(document.getElementById('crec-venta').value) || 0;
-    const venta2026 = venta2025 * (1 + crecimientoVenta / 100);
-    document.getElementById('venta-2026').textContent = formatNumber(venta2026);
-    presupuesto.proyeccion.ingresos['Venta de Bienes y Servicios'] = venta2026;
-    
-    const otrosNoTrib2025 = parseFloat(document.getElementById('otros-no-trib-2025').value) || 0;
-    const crecimientoOtrosNoTrib = parseFloat(document.getElementById('crec-otros-no-trib').value) || 0;
-    const otrosNoTrib2026 = otrosNoTrib2025 * (1 + crecimientoOtrosNoTrib / 100);
-    document.getElementById('otros-no-trib-2026').textContent = formatNumber(otrosNoTrib2026);
-    presupuesto.proyeccion.ingresos['Otros Ingresos No Tributarios'] = otrosNoTrib2026;
-    
-    // Transferencias
-    const sgp2024 = parseFloat(document.getElementById('sgp-2024').value) || 0;
-    const crecimientoSGP = parseFloat(document.getElementById('crec-sgp-input').value) || (TASA_INFLACION_2025 + 4);
-    const sgp2026 = sgp2024 * (1 + crecimientoSGP / 100);
-    document.getElementById('sgp-2026').textContent = formatNumber(sgp2026);
-    presupuesto.proyeccion.ingresos['SGP - Propósito General'] = sgp2026;
-    
-    const fonpet2023 = parseFloat(document.getElementById('fonpet-2023').value) || 0;
-    const crecFonpet = parseFloat(document.getElementById('crec-fonpet').value) || 20;
-    const fonpet2026 = fonpet2023 * (1 + crecFonpet / 100);
-    document.getElementById('fonpet-2026').textContent = formatNumber(fonpet2026);
-    presupuesto.proyeccion.ingresos['FONPET'] = fonpet2026;
-    
-    // Recursos de Capital
-    const creditoFindeter2025 = parseFloat(document.getElementById('credito-findeter-2025').value) || 0;
-    const crecCreditoFindeter = parseFloat(document.getElementById('crec-credito-findeter').value) || 0;
-    const creditoFindeter2026 = creditoFindeter2025 * (1 + crecCreditoFindeter / 100);
-    document.getElementById('credito-findeter-2026').textContent = formatNumber(creditoFindeter2026);
-    presupuesto.proyeccion.ingresos['Crédito FINDETER EXTERNO'] = creditoFindeter2026;
-    
-    const creditoEnterritorio2025 = parseFloat(document.getElementById('credito-enterritorio-2025').value) || 0;
-    const crecCreditoEnterritorio = parseFloat(document.getElementById('crec-credito-enterritorio').value) || 0;
-    const creditoEnterritorio2026 = creditoEnterritorio2025 * (1 + crecCreditoEnterritorio / 100);
-    document.getElementById('credito-enterritorio-2026').textContent = formatNumber(creditoEnterritorio2026);
-    presupuesto.proyeccion.ingresos['Crédito ENTerritorio'] = creditoEnterritorio2026;
-    
-    const donacionAlemana2025 = parseFloat(document.getElementById('donacion-alemana-2025').value) || 0;
-    const crecDonacionAlemana = parseFloat(document.getElementById('crec-donacion-alemana').value) || 0;
-    const donacionAlemana2026 = donacionAlemana2025 * (1 + crecDonacionAlemana / 100);
-    document.getElementById('donacion-alemana-2026').textContent = formatNumber(donacionAlemana2026);
-    presupuesto.proyeccion.ingresos['Donación Gobierno Alemán'] = donacionAlemana2026;
-    
-    // Ingresos dinámicos agregados por el usuario
-    let totalBaseDinamicoIngresos = 0;
     document.querySelectorAll('[id^="concepto-ingreso-"]').forEach(input => {
         const id = input.id.split('-')[2];
         const concepto = input.value.trim() || `Ingreso ${id}`;
-        const base = parseFloat(document.getElementById(`base-ingreso-${id}`).value) || 0;
-        const tasa = parseFloat(document.getElementById(`crec-ingreso-${id}`).value) || 0;
+        const base = parseFloat(document.getElementById(`base-ingreso-${id}`)?.value) || 0;
+        const tasa = parseFloat(document.getElementById(`crec-ingreso-${id}`)?.value) || 0;
         const proy = base * (1 + tasa / 100);
-        document.getElementById(`proy-ingreso-${id}`).textContent = formatNumber(proy);
-        presupuesto.proyeccion.ingresos[concepto] = proy;
-        totalBaseDinamicoIngresos += base;
+        
+        const proyElement = document.getElementById(`proy-ingreso-${id}`);
+        if (proyElement) {
+            proyElement.textContent = formatNumber(proy);
+        }
+        
+        if (concepto) {
+            presupuesto.proyeccion.ingresos[concepto] = proy;
+        }
+        totalBase2025 += base;
     });
 
-    // Calcular total ingresos 2025
-    const totalIngresos2025 = predial2025 + industria2025 + tasaVias2025 + venta2025 + otrosNoTrib2025 + 
-                             sgp2024 + fonpet2023 + creditoFindeter2025 + creditoEnterritorio2025 + 
-                             donacionAlemana2025 + totalBaseDinamicoIngresos;
-    document.getElementById('total-ingresos-2025').textContent = formatNumber(totalIngresos2025);
+    // Calcular total ingresos 2025 (base)
+    document.getElementById('total-ingresos-2025').textContent = formatNumber(totalBase2025);
 }
 
 function calcularGastos() {
     presupuesto.proyeccion.gastos = {};
     
-    // Gastos de Funcionamiento
-    const servPersonales2025 = parseFloat(document.getElementById('serv-personales-2025').value) || 0;
-    const crecServPersonales = parseFloat(document.getElementById('crec-serv-personales').value) || 0;
-    const servPersonales2026 = servPersonales2025 * (1 + Math.min(crecServPersonales, 14) / 100);
-    document.getElementById('serv-personales-2026').textContent = formatNumber(servPersonales2026);
-    presupuesto.proyeccion.gastos['Servicios Personales'] = servPersonales2026;
+    // Solo procesar gastos dinámicos agregados por el usuario
+    let totalBase2025 = 0;
     
-    const honorarios2025 = parseFloat(document.getElementById('honorarios-concejales-2025').value) || 0;
-    const crecHonorarios = parseFloat(document.getElementById('crec-honorarios-concejales').value) || 0;
-    const honorarios2026 = honorarios2025 * (1 + crecHonorarios / 100);
-    document.getElementById('honorarios-concejales-2026').textContent = formatNumber(honorarios2026);
-    presupuesto.proyeccion.gastos['Honorarios Concejales'] = honorarios2026;
-    
-    const gastosGenerales2025 = parseFloat(document.getElementById('gastos-generales-2025').value) || 0;
-    const crecGastosGenerales = parseFloat(document.getElementById('crec-gastos-generales').value) || 0;
-    const gastosGenerales2026 = gastosGenerales2025 * (1 + crecGastosGenerales / 100);
-    document.getElementById('gastos-generales-2026').textContent = formatNumber(gastosGenerales2026);
-    presupuesto.proyeccion.gastos['Gastos Generales'] = gastosGenerales2026;
-    
-    const sistematizacion2025 = parseFloat(document.getElementById('sistematizacion-2025').value) || 0;
-    const crecSistematizacion = parseFloat(document.getElementById('crec-sistematizacion').value) || 0;
-    const sistematizacion2026 = sistematizacion2025 * (1 + crecSistematizacion / 100);
-    document.getElementById('sistematizacion-2026').textContent = formatNumber(sistematizacion2026);
-    presupuesto.proyeccion.gastos['Sistematización'] = sistematizacion2026;
-    
-    const contribuciones2025 = parseFloat(document.getElementById('contribuciones-nomina-2025').value) || 0;
-    const crecContribuciones = parseFloat(document.getElementById('crec-contribuciones-nomina').value) || 0;
-    const contribuciones2026 = contribuciones2025 * (1 + crecContribuciones / 100);
-    document.getElementById('contribuciones-nomina-2026').textContent = formatNumber(contribuciones2026);
-    presupuesto.proyeccion.gastos['Contribuciones Nómina'] = contribuciones2026;
-    
-    // Transferencias
-    const fondoDeporte2025 = parseFloat(document.getElementById('fondo-deporte-cultura-2025').value) || 0;
-    const crecFondoDeporte = parseFloat(document.getElementById('crec-fondo-deporte-cultura').value) || 0;
-    const fondoDeporte2026 = fondoDeporte2025 * (1 + crecFondoDeporte / 100);
-    document.getElementById('fondo-deporte-cultura-2026').textContent = formatNumber(fondoDeporte2026);
-    presupuesto.proyeccion.gastos['Fondo Local Deporte y Cultura'] = fondoDeporte2026;
-    
-    const fondoSalud2025 = parseFloat(document.getElementById('fondo-salud-2025').value) || 0;
-    const crecFondoSalud = parseFloat(document.getElementById('crec-fondo-salud').value) || 0;
-    const fondoSalud2026 = fondoSalud2025 * (1 + crecFondoSalud / 100);
-    document.getElementById('fondo-salud-2026').textContent = formatNumber(fondoSalud2026);
-    presupuesto.proyeccion.gastos['Fondo Local de Salud'] = fondoSalud2026;
-    
-    const concejo2025 = parseFloat(document.getElementById('concejo-municipal-2025').value) || 0;
-    const crecConcejo = parseFloat(document.getElementById('crec-concejo-municipal').value) || 0;
-    const concejo2026 = concejo2025 * (1 + crecConcejo / 100);
-    document.getElementById('concejo-municipal-2026').textContent = formatNumber(concejo2026);
-    presupuesto.proyeccion.gastos['Concejo Municipal'] = concejo2026;
-    
-    const personeria2025 = parseFloat(document.getElementById('personeria-municipal-2025').value) || 0;
-    const crecPersoneria = parseFloat(document.getElementById('crec-personeria-municipal').value) || 0;
-    const personeria2026 = personeria2025 * (1 + crecPersoneria / 100);
-    document.getElementById('personeria-municipal-2026').textContent = formatNumber(personeria2026);
-    presupuesto.proyeccion.gastos['Personería Municipal'] = personeria2026;
-    
-    // Gastos de Inversión
-    const proyecto1_2025 = parseFloat(document.getElementById('proyecto1-2025').value) || 0;
-    const crecProyecto1 = parseFloat(document.getElementById('crec-proyecto1').value) || 0;
-    const proyecto1_2026 = proyecto1_2025 * (1 + crecProyecto1 / 100);
-    document.getElementById('proyecto1-2026').textContent = formatNumber(proyecto1_2026);
-    presupuesto.proyeccion.gastos['Proyecto 1'] = proyecto1_2026;
-    
-    const proyecto2_2025 = parseFloat(document.getElementById('proyecto2-2025').value) || 0;
-    const crecProyecto2 = parseFloat(document.getElementById('crec-proyecto2').value) || 0;
-    const proyecto2_2026 = proyecto2_2025 * (1 + crecProyecto2 / 100);
-    document.getElementById('proyecto2-2026').textContent = formatNumber(proyecto2_2026);
-    presupuesto.proyeccion.gastos['Proyecto 2'] = proyecto2_2026;
-    
-    const proyecto3_2025 = parseFloat(document.getElementById('proyecto3-2025').value) || 0;
-    const crecProyecto3 = parseFloat(document.getElementById('crec-proyecto3').value) || 0;
-    const proyecto3_2026 = proyecto3_2025 * (1 + crecProyecto3 / 100);
-    document.getElementById('proyecto3-2026').textContent = formatNumber(proyecto3_2026);
-    presupuesto.proyeccion.gastos['Proyecto 3'] = proyecto3_2026;
-    
-    const proyecto4_2025 = parseFloat(document.getElementById('proyecto4-2025').value) || 0;
-    const crecProyecto4 = parseFloat(document.getElementById('crec-proyecto4').value) || 0;
-    const proyecto4_2026 = proyecto4_2025 * (1 + crecProyecto4 / 100);
-    document.getElementById('proyecto4-2026').textContent = formatNumber(proyecto4_2026);
-    presupuesto.proyeccion.gastos['Proyecto 4'] = proyecto4_2026;
-    
-    const cobertura2025 = parseFloat(document.getElementById('cobertura-salud-2025').value) || 0;
-    const crecCobertura = parseFloat(document.getElementById('crec-cobertura-salud').value) || 0;
-    const cobertura2026 = cobertura2025 * (1 + crecCobertura / 100);
-    document.getElementById('cobertura-salud-2026').textContent = formatNumber(cobertura2026);
-    presupuesto.proyeccion.gastos['Cobertura Salud'] = cobertura2026;
-    
-    // Gastos dinámicos agregados por el usuario
-    let totalBaseDinamicoGastos = 0;
     document.querySelectorAll('[id^="concepto-gasto-"]').forEach(input => {
         const id = input.id.split('-')[2];
         const concepto = input.value.trim() || `Gasto ${id}`;
-        const base = parseFloat(document.getElementById(`base-gasto-${id}`).value) || 0;
-        const tasa = parseFloat(document.getElementById(`crec-gasto-${id}`).value) || 0;
+        const base = parseFloat(document.getElementById(`base-gasto-${id}`)?.value) || 0;
+        const tasa = parseFloat(document.getElementById(`crec-gasto-${id}`)?.value) || 0;
         const proy = base * (1 + tasa / 100);
-        document.getElementById(`proy-gasto-${id}`).textContent = formatNumber(proy);
-        presupuesto.proyeccion.gastos[concepto] = proy;
-        totalBaseDinamicoGastos += base;
+        
+        const proyElement = document.getElementById(`proy-gasto-${id}`);
+        if (proyElement) {
+            proyElement.textContent = formatNumber(proy);
+        }
+        
+        if (concepto) {
+            presupuesto.proyeccion.gastos[concepto] = proy;
+        }
+        totalBase2025 += base;
     });
 
-    // Calcular total gastos 2025
-    const totalGastos2025 = servPersonales2025 + honorarios2025 + gastosGenerales2025 + sistematizacion2025 + 
-                           contribuciones2025 + fondoDeporte2025 + fondoSalud2025 + concejo2025 + 
-                           personeria2025 + proyecto1_2025 + proyecto2_2025 + proyecto3_2025 + 
-                           proyecto4_2025 + cobertura2025 + totalBaseDinamicoGastos;
-    document.getElementById('total-gastos-2025').textContent = formatNumber(totalGastos2025);
+    // Calcular total gastos 2025 (base)
+    document.getElementById('total-gastos-2025').textContent = formatNumber(totalBase2025);
 }
 
 function actualizarTotales() {
@@ -466,10 +324,7 @@ function actualizarTotales() {
 
 function calcularSubtotalesCategorias() {
     // Ingresos Tributarios
-    let subtotalTributarios = 
-        (parseFloat(document.getElementById('predial-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('industria-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('tasa-vias-2026')?.textContent.replace(/\./g, '')) || 0);
+    let subtotalTributarios = 0;
     
     // Agregar dinámicos de tributarios
     document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="tributarios"]').forEach(fila => {
@@ -483,9 +338,7 @@ function calcularSubtotalesCategorias() {
     }
     
     // Ingresos No Tributarios
-    let subtotalNoTributarios = 
-        (parseFloat(document.getElementById('venta-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('otros-no-trib-2026')?.textContent.replace(/\./g, '')) || 0);
+    let subtotalNoTributarios = 0;
     
     // Agregar dinámicos de no-tributarios
     document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="no-tributarios"]').forEach(fila => {
@@ -499,9 +352,7 @@ function calcularSubtotalesCategorias() {
     }
     
     // Transferencias (Ingresos)
-    let subtotalTransferenciasIngreso = 
-        (parseFloat(document.getElementById('sgp-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('fonpet-2026')?.textContent.replace(/\./g, '')) || 0);
+    let subtotalTransferenciasIngreso = 0;
     
     // Agregar dinámicos de transferencias
     document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="transferencias"]').forEach(fila => {
@@ -514,30 +365,92 @@ function calcularSubtotalesCategorias() {
         document.getElementById('subtotal-transferencias-ingreso').textContent = formatNumber(subtotalTransferenciasIngreso);
     }
     
-    // Recursos de Capital
-    let subtotalRecursosCapital = 
-        (parseFloat(document.getElementById('credito-findeter-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('credito-enterritorio-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('donacion-alemana-2026')?.textContent.replace(/\./g, '')) || 0);
+    // Recursos del Crédito
+    let subtotalRecursosCredito = 0;
     
-    // Agregar dinámicos de recursos-capital
-    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="recursos-capital"]').forEach(fila => {
+    // Agregar dinámicos de recursos-credito
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="recursos-credito"]').forEach(fila => {
         const id = fila.getAttribute('data-id');
         const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
-        subtotalRecursosCapital += valor;
+        subtotalRecursosCredito += valor;
     });
     
-    if (document.getElementById('subtotal-recursos-capital')) {
-        document.getElementById('subtotal-recursos-capital').textContent = formatNumber(subtotalRecursosCapital);
+    if (document.getElementById('subtotal-recursos-credito')) {
+        document.getElementById('subtotal-recursos-credito').textContent = formatNumber(subtotalRecursosCredito);
+    }
+
+    // Recursos del Balance
+    let subtotalRecursosBalance = 0;
+    
+    // Agregar dinámicos de recursos-balance
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="recursos-balance"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalRecursosBalance += valor;
+    });
+    
+    if (document.getElementById('subtotal-recursos-balance')) {
+        document.getElementById('subtotal-recursos-balance').textContent = formatNumber(subtotalRecursosBalance);
+    }
+
+    // Excedentes Financieros
+    let subtotalExcedentesFinancieros = 0;
+    
+    // Agregar dinámicos de excedentes-financieros
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="excedentes-financieros"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalExcedentesFinancieros += valor;
+    });
+    
+    if (document.getElementById('subtotal-excedentes-financieros')) {
+        document.getElementById('subtotal-excedentes-financieros').textContent = formatNumber(subtotalExcedentesFinancieros);
+    }
+
+    // Rendimientos Financieros
+    let subtotalRendimientosFinancieros = 0;
+    
+    // Agregar dinámicos de rendimientos-financieros
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="rendimientos-financieros"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalRendimientosFinancieros += valor;
+    });
+    
+    if (document.getElementById('subtotal-rendimientos-financieros')) {
+        document.getElementById('subtotal-rendimientos-financieros').textContent = formatNumber(subtotalRendimientosFinancieros);
+    }
+
+    // Venta de Activos
+    let subtotalVentaActivos = 0;
+    
+    // Agregar dinámicos de venta-activos
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="venta-activos"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalVentaActivos += valor;
+    });
+    
+    if (document.getElementById('subtotal-venta-activos')) {
+        document.getElementById('subtotal-venta-activos').textContent = formatNumber(subtotalVentaActivos);
+    }
+
+    // Donaciones
+    let subtotalDonaciones = 0;
+    
+    // Agregar dinámicos de donaciones
+    document.querySelectorAll('.fila-dinamica-ingreso[data-categoria="donaciones"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-ingreso-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalDonaciones += valor;
+    });
+    
+    if (document.getElementById('subtotal-donaciones')) {
+        document.getElementById('subtotal-donaciones').textContent = formatNumber(subtotalDonaciones);
     }
     
     // Gastos de Funcionamiento
-    let subtotalFuncionamiento = 
-        (parseFloat(document.getElementById('serv-personales-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('honorarios-concejales-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('gastos-generales-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('sistematizacion-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('contribuciones-nomina-2026')?.textContent.replace(/\./g, '')) || 0);
+    let subtotalFuncionamiento = 0;
     
     // Agregar dinámicos de funcionamiento
     document.querySelectorAll('.fila-dinamica-gasto[data-categoria="funcionamiento"]').forEach(fila => {
@@ -551,11 +464,7 @@ function calcularSubtotalesCategorias() {
     }
     
     // Transferencias (Gastos)
-    let subtotalTransferenciasGasto = 
-        (parseFloat(document.getElementById('fondo-deporte-cultura-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('fondo-salud-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('concejo-municipal-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('personeria-municipal-2026')?.textContent.replace(/\./g, '')) || 0);
+    let subtotalTransferenciasGasto = 0;
     
     // Agregar dinámicos de transferencias-gastos
     document.querySelectorAll('.fila-dinamica-gasto[data-categoria="transferencias-gastos"]').forEach(fila => {
@@ -569,12 +478,7 @@ function calcularSubtotalesCategorias() {
     }
     
     // Gastos de Inversión
-    let subtotalInversion = 
-        (parseFloat(document.getElementById('proyecto1-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('proyecto2-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('proyecto3-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('proyecto4-2026')?.textContent.replace(/\./g, '')) || 0) +
-        (parseFloat(document.getElementById('cobertura-salud-2026')?.textContent.replace(/\./g, '')) || 0);
+    let subtotalInversion = 0;
     
     // Agregar dinámicos de inversión
     document.querySelectorAll('.fila-dinamica-gasto[data-categoria="inversion"]').forEach(fila => {
@@ -1639,7 +1543,17 @@ function cargarDatosEjemplo() {
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('agregar-item-btn')) {
         const categoria = e.target.getAttribute('data-categoria');
-        const esIngreso = ['tributarios', 'no-tributarios', 'transferencias', 'recursos-capital'].includes(categoria);
+        const esIngreso = [
+            'tributarios', 
+            'no-tributarios', 
+            'transferencias', 
+            'recursos-credito', 
+            'recursos-balance',
+            'excedentes-financieros',
+            'rendimientos-financieros',
+            'venta-activos',
+            'donaciones'
+        ].includes(categoria);
         const tabla = esIngreso ? document.querySelector('#ingresos-table tbody') : document.querySelector('#gastos-table tbody');
         const tipo = esIngreso ? 'ingreso' : 'gasto';
         
@@ -1659,7 +1573,12 @@ function agregarFilaPorCategoria(tabla, categoria, tipo) {
         'tributarios': 'Nuevo Ingreso Tributario',
         'no-tributarios': 'Nuevo Ingreso No Tributario',
         'transferencias': tipo === 'ingreso' ? 'Nueva Transferencia' : 'Nueva Transferencia',
-        'recursos-capital': 'Nuevo Recurso de Capital',
+        'recursos-credito': 'Nuevo Recurso del Crédito',
+        'recursos-balance': 'Nuevo Recurso del Balance',
+        'excedentes-financieros': 'Nuevo Excedente Financiero',
+        'rendimientos-financieros': 'Nuevo Rendimiento Financiero',
+        'venta-activos': 'Nueva Venta de Activo',
+        'donaciones': 'Nueva Donación',
         'funcionamiento': 'Nuevo Gasto de Funcionamiento',
         'transferencias-gastos': 'Nueva Transferencia',
         'inversion': 'Nuevo Gasto de Inversión'
@@ -1771,7 +1690,9 @@ const exportarProyeccionAPDF = (tableId, titulo, totalBaseId, totalProjId, tipo)
     const rows = table.querySelectorAll('tbody tr');
 
     rows.forEach(tr => {
-        // Saltar botones de añadir
+        // Saltar botones de añadir y filas vacías
+        if (tr.classList.contains('add-button-row')) return;
+        if (tr.querySelector('button.agregar-item-btn')) return;
         if (tr.querySelector('button#agregar-ingreso') || tr.querySelector('button#agregar-gasto')) return;
 
         if (tr.classList.contains('category')) {

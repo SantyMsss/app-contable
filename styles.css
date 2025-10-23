@@ -317,3 +317,23 @@ button#agregar-gasto:hover {
     transform: translateY(-50%);
     font-size: 12px;
 }
+
+/* Estilos para el textarea de análisis */
+#analisis-texto {
+    width: 70%;
+    max-width: 800px;
+    min-height: 300px;
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    resize: vertical;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#analisis-texto:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
