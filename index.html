@@ -65,6 +65,11 @@
                             <td><input type="number" id="crec-tasa-vias" value="0"></td>
                             <td><span id="tasa-vias-2026" class="calculated">0</span></td>
                         </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="tributarios">AGREGAR</button>
+                            </td>
+                        </tr>
                         
                         <!-- Ingresos No Tributarios -->
                         <tr class="category">
@@ -81,6 +86,11 @@
                             <td><input type="number" id="otros-no-trib-2025" class="base-input" value="0"></td>
                             <td><input type="number" id="crec-otros-no-trib" value="60"></td>
                             <td><span id="otros-no-trib-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="no-tributarios">AGREGAR</button>
+                            </td>
                         </tr>
                         
                         <!-- Transferencias -->
@@ -100,6 +110,11 @@
                             <td><input type="number" id="fonpet-2023" class="base-input" value="0"></td>
                             <td><input type="number" id="crec-fonpet" value="20"></td>
                             <td><span id="fonpet-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="transferencias">AGREGAR</button>
+                            </td>
                         </tr>
                         
                         <!-- Recursos de Capital -->
@@ -126,10 +141,9 @@
                             <td><input type="number" id="crec-donacion-alemana" value="0"></td>
                             <td><span id="donacion-alemana-2026" class="calculated">0</span></td>
                         </tr>
-
-                        <tr>
+                        <tr class="add-button-row">
                             <td colspan="4">
-                                <button type="button" id="agregar-ingreso">+ Añadir ingreso</button>
+                                <button type="button" class="agregar-item-btn" data-categoria="recursos-capital">AGREGAR</button>
                             </td>
                         </tr>
 
@@ -184,15 +198,17 @@
                             <td><input type="number" id="crec-sistematizacion" value="0"></td>
                             <td><span id="sistematizacion-2026" class="calculated">0</span></td>
                         </tr>
-                        
-                        <!-- Contribuciones Nómina -->
                         <tr>
                             <td>Contribuciones Nómina</td>
                             <td><input type="number" id="contribuciones-nomina-2025" class="base-input" value="0"></td>
                             <td><input type="number" id="crec-contribuciones-nomina" value="0"></td>
                             <td><span id="contribuciones-nomina-2026" class="calculated">0</span></td>
                         </tr>
-
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="funcionamiento">AGREGAR</button>
+                            </td>
+                        </tr>
                         
                         <!-- Transferencias -->
                         <tr class="category">
@@ -224,6 +240,11 @@
                             <td><input type="number" id="personeria-municipal-2025" class="base-input" value="0"></td>
                             <td><input type="number" id="crec-personeria-municipal" value="0"></td>
                             <td><span id="personeria-municipal-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="transferencias-gastos">AGREGAR</button>
+                            </td>
                         </tr>
                         
                         <!-- Gastos de Inversión -->
@@ -259,6 +280,11 @@
                             <td><input type="number" id="cobertura-salud-2025" class="base-input" value="0"></td>
                             <td><input type="number" id="crec-cobertura-salud" value="0"></td>
                             <td><span id="cobertura-salud-2026" class="calculated">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="inversion">AGREGAR</button>
+                            </td>
                         </tr>
 
                         <tr>

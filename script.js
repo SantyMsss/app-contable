@@ -1508,29 +1508,65 @@ function cargarDatosEjemplo() {
     actualizarGraficos();
 }
 
-// Eventos para añadir filas dinámicas
-document.getElementById('agregar-ingreso').addEventListener('click', function () {
-    const tabla = document.querySelector('#ingresos-table tbody');
+// Eventos para añadir filas dinámicas por categoría
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('agregar-item-btn')) {
+        const categoria = e.target.getAttribute('data-categoria');
+        const esIngreso = ['tributarios', 'no-tributarios', 'transferencias', 'recursos-capital'].includes(categoria);
+        const tabla = esIngreso ? document.querySelector('#ingresos-table tbody') : document.querySelector('#gastos-table tbody');
+        const tipo = esIngreso ? 'ingreso' : 'gasto';
+        
+        agregarFilaPorCategoria(tabla, categoria, tipo);
+    }
+});
+
+function agregarFilaPorCategoria(tabla, categoria, tipo) {
     const fila = document.createElement('tr');
     const id = Date.now();
-
-    fila.classList.add('fila-dinamica-ingreso');
+    
+    fila.classList.add(`fila-dinamica-${tipo}`);
     fila.setAttribute('data-id', id);
-
+    fila.setAttribute('data-categoria', categoria);
+    
+    const placeholderTextos = {
+        'tributarios': 'Nuevo Ingreso Tributario',
+        'no-tributarios': 'Nuevo Ingreso No Tributario',
+        'transferencias': tipo === 'ingreso' ? 'Nueva Transferencia' : 'Nueva Transferencia',
+        'recursos-capital': 'Nuevo Recurso de Capital',
+        'funcionamiento': 'Nuevo Gasto de Funcionamiento',
+        'transferencias-gastos': 'Nueva Transferencia',
+        'inversion': 'Nuevo Gasto de Inversión'
+    };
+    
+    const placeholder = placeholderTextos[categoria] || `Nuevo ${tipo}`;
+    
     fila.innerHTML = `
-        <td><input type="text" placeholder="Nuevo Ingreso" id="concepto-ingreso-${id}"></td>
-        <td><input type="number" class="base-input" id="base-ingreso-${id}" value="0"></td>
-        <td><input type="number" id="crec-ingreso-${id}" value="0"></td>
+        <td><input type="text" placeholder="${placeholder}" id="concepto-${tipo}-${id}"></td>
+        <td><input type="number" class="base-input" id="base-${tipo}-${id}" value="0"></td>
+        <td><input type="number" id="crec-${tipo}-${id}" value="0"></td>
         <td>
-            <span id="proy-ingreso-${id}" class="calculated">0</span>
-            <button class="btn-eliminar-fila" data-id="${id}" data-tipo="ingreso">✖</button>
+            <span id="proy-${tipo}-${id}" class="calculated">0</span>
+            <button class="btn-eliminar-fila" data-id="${id}" data-tipo="${tipo}">✖</button>
         </td>
     `;
-    tabla.insertBefore(fila, tabla.querySelector('.total'));
-
-    document.getElementById(`base-ingreso-${id}`).addEventListener('input', calcularProyeccion);
-    document.getElementById(`crec-ingreso-${id}`).addEventListener('input', calcularProyeccion);
-});
+    
+    // Encontrar la fila del botón de la categoría correspondiente
+    const botonRow = Array.from(tabla.querySelectorAll('.add-button-row')).find(row => {
+        const btn = row.querySelector('.agregar-item-btn');
+        return btn && btn.getAttribute('data-categoria') === categoria;
+    });
+    
+    if (botonRow) {
+        tabla.insertBefore(fila, botonRow);
+    } else {
+        // Si no encuentra el botón, insertar antes del total
+        tabla.insertBefore(fila, tabla.querySelector('.total'));
+    }
+    
+    // Agregar eventos
+    document.getElementById(`base-${tipo}-${id}`).addEventListener('input', calcularProyeccion);
+    document.getElementById(`crec-${tipo}-${id}`).addEventListener('input', calcularProyeccion);
+}
 
 document.getElementById('agregar-gasto').addEventListener('click', function () {
     const tabla = document.querySelector('#gastos-table tbody');
