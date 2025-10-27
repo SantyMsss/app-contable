@@ -449,46 +449,92 @@ function calcularSubtotalesCategorias() {
         document.getElementById('subtotal-donaciones').textContent = formatNumber(subtotalDonaciones);
     }
     
-    // Gastos de Funcionamiento
-    let subtotalFuncionamiento = 0;
-    
-    // Agregar dinámicos de funcionamiento
-    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="funcionamiento"]').forEach(fila => {
+    // Servicios personales directos
+    let subtotalServiciosDirectos = 0;
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="servicios-directos"]').forEach(fila => {
         const id = fila.getAttribute('data-id');
         const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
-        subtotalFuncionamiento += valor;
+        subtotalServiciosDirectos += valor;
     });
-    
-    if (document.getElementById('subtotal-funcionamiento')) {
-        document.getElementById('subtotal-funcionamiento').textContent = formatNumber(subtotalFuncionamiento);
+    if (document.getElementById('subtotal-servicios-directos')) {
+        document.getElementById('subtotal-servicios-directos').textContent = formatNumber(subtotalServiciosDirectos);
     }
     
-    // Transferencias (Gastos)
-    let subtotalTransferenciasGasto = 0;
-    
-    // Agregar dinámicos de transferencias-gastos
-    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="transferencias-gastos"]').forEach(fila => {
+    // Servicios personales indirectos
+    let subtotalServiciosIndirectos = 0;
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="servicios-indirectos"]').forEach(fila => {
         const id = fila.getAttribute('data-id');
         const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
-        subtotalTransferenciasGasto += valor;
+        subtotalServiciosIndirectos += valor;
     });
-    
-    if (document.getElementById('subtotal-transferencias-gasto')) {
-        document.getElementById('subtotal-transferencias-gasto').textContent = formatNumber(subtotalTransferenciasGasto);
+    if (document.getElementById('subtotal-servicios-indirectos')) {
+        document.getElementById('subtotal-servicios-indirectos').textContent = formatNumber(subtotalServiciosIndirectos);
     }
     
-    // Gastos de Inversión
-    let subtotalInversion = 0;
-    
-    // Agregar dinámicos de inversión
-    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="inversion"]').forEach(fila => {
+    // Contribuciones inherentes a la nómina
+    let subtotalContribucionesNomina = 0;
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="contribuciones-nomina"]').forEach(fila => {
         const id = fila.getAttribute('data-id');
         const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
-        subtotalInversion += valor;
+        subtotalContribucionesNomina += valor;
     });
+    if (document.getElementById('subtotal-contribuciones-nomina')) {
+        document.getElementById('subtotal-contribuciones-nomina').textContent = formatNumber(subtotalContribucionesNomina);
+    }
     
-    if (document.getElementById('subtotal-inversion')) {
-        document.getElementById('subtotal-inversion').textContent = formatNumber(subtotalInversion);
+    // Gastos generales
+    let subtotalGastosGenerales = 0;
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="gastos-generales"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalGastosGenerales += valor;
+    });
+    if (document.getElementById('subtotal-gastos-generales')) {
+        document.getElementById('subtotal-gastos-generales').textContent = formatNumber(subtotalGastosGenerales);
+    }
+    
+    // Transferencias a fondos y entidades
+    let subtotalTransferenciasFondos = 0;
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="transferencias-fondos"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalTransferenciasFondos += valor;
+    });
+    if (document.getElementById('subtotal-transferencias-fondos')) {
+        document.getElementById('subtotal-transferencias-fondos').textContent = formatNumber(subtotalTransferenciasFondos);
+    }
+    
+    // Cuentas por pagar de la vigencia anterior
+    let subtotalCuentasPagar = 0;
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="cuentas-pagar"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalCuentasPagar += valor;
+    });
+    if (document.getElementById('subtotal-cuentas-pagar')) {
+        document.getElementById('subtotal-cuentas-pagar').textContent = formatNumber(subtotalCuentasPagar);
+    }
+    
+    // Amortización DPI
+    let subtotalAmortizacionDpi = 0;
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="amortizacion-dpi"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalAmortizacionDpi += valor;
+    });
+    if (document.getElementById('subtotal-amortizacion-dpi')) {
+        document.getElementById('subtotal-amortizacion-dpi').textContent = formatNumber(subtotalAmortizacionDpi);
+    }
+    
+    // Intereses, comisiones, gastos de DPI
+    let subtotalInteresesDpi = 0;
+    document.querySelectorAll('.fila-dinamica-gasto[data-categoria="intereses-dpi"]').forEach(fila => {
+        const id = fila.getAttribute('data-id');
+        const valor = parseFloat(document.getElementById(`proy-gasto-${id}`)?.textContent.replace(/\./g, '')) || 0;
+        subtotalInteresesDpi += valor;
+    });
+    if (document.getElementById('subtotal-intereses-dpi')) {
+        document.getElementById('subtotal-intereses-dpi').textContent = formatNumber(subtotalInteresesDpi);
     }
 }
 

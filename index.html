@@ -165,42 +165,91 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Gastos de Funcionamiento -->
+                        <!-- Servicios personales directos -->
                         <tr class="category">
-                            <td colspan="3"><strong>Gastos de Funcionamiento</strong></td>
-                            <td class="subtotal-categoria"><span id="subtotal-funcionamiento" class="subtotal-value">0</span></td>
+                            <td colspan="3"><strong>Servicios personales directos</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-servicios-directos" class="subtotal-value">0</span></td>
                         </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
-                                <button type="button" class="agregar-item-btn" data-categoria="funcionamiento">AGREGAR</button>
+                                <button type="button" class="agregar-item-btn" data-categoria="servicios-directos">AGREGAR</button>
                             </td>
                         </tr>
                         
-                        <!-- Transferencias -->
+                        <!-- Servicios personales indirectos -->
                         <tr class="category">
-                            <td colspan="3"><strong>Transferencias</strong></td>
-                            <td class="subtotal-categoria"><span id="subtotal-transferencias-gasto" class="subtotal-value">0</span></td>
+                            <td colspan="3"><strong>Servicios personales indirectos</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-servicios-indirectos" class="subtotal-value">0</span></td>
                         </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
-                                <button type="button" class="agregar-item-btn" data-categoria="transferencias-gastos">AGREGAR</button>
+                                <button type="button" class="agregar-item-btn" data-categoria="servicios-indirectos">AGREGAR</button>
                             </td>
                         </tr>
                         
-                        <!-- Gastos de Inversión -->
+                        <!-- Contribuciones inherentes a la nómina -->
                         <tr class="category">
-                            <td colspan="3"><strong>Gastos de Inversión</strong></td>
-                            <td class="subtotal-categoria"><span id="subtotal-inversion" class="subtotal-value">0</span></td>
+                            <td colspan="3"><strong>Contribuciones inherentes a la nómina</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-contribuciones-nomina" class="subtotal-value">0</span></td>
                         </tr>
                         <tr class="add-button-row">
                             <td colspan="4">
-                                <button type="button" class="agregar-item-btn" data-categoria="inversion">AGREGAR</button>
+                                <button type="button" class="agregar-item-btn" data-categoria="contribuciones-nomina">AGREGAR</button>
                             </td>
                         </tr>
-
-                        <tr>
+                        
+                        <!-- Gastos generales -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Gastos generales</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-gastos-generales" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
                             <td colspan="4">
-                                <button type="button" id="agregar-gasto">+ Añadir gasto</button>
+                                <button type="button" class="agregar-item-btn" data-categoria="gastos-generales">AGREGAR</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Transferencias a fondos y entidades -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Transferencias a fondos y entidades</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-transferencias-fondos" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="transferencias-fondos">AGREGAR</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Cuentas por pagar de la vigencia anterior -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Cuentas por pagar de la vigencia anterior</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-cuentas-pagar" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="cuentas-pagar">AGREGAR</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Amortización DPI -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Amortización DPI</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-amortizacion-dpi" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="amortizacion-dpi">AGREGAR</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Intereses, comisiones, gastos de DPI -->
+                        <tr class="category">
+                            <td colspan="3"><strong>Intereses, comisiones, gastos de DPI</strong></td>
+                            <td class="subtotal-categoria"><span id="subtotal-intereses-dpi" class="subtotal-value">0</span></td>
+                        </tr>
+                        <tr class="add-button-row">
+                            <td colspan="4">
+                                <button type="button" class="agregar-item-btn" data-categoria="intereses-dpi">AGREGAR</button>
                             </td>
                         </tr>
 
@@ -449,8 +498,7 @@
     
     <footer>
         <p>Herramienta de asistencia para Presupuesto Público - Harold Andres Lopez Sepulveda </p>
-        <p> Desarrollada por: Santiago Martinez Serna - © 2025</p>
-        <button id="exportar-datos">Exportar Datos</button>
+        <p> Desarrollada por: Santiago Martinez Serna © 2025</p>
        
     </footer>
 
