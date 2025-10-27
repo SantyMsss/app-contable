@@ -880,17 +880,21 @@ function guardarDistribucionIngreso() {
 
 // Función específica para reset después de distribución exitosa
 function resetearFormularioPostDistribucion() {
-    // Limpiar formulario sin manejar distribución (ya se hizo)
+    // Ocultar sección de distribución
+    ocultarSeccionDistribucion();
+    
+    // Limpiar todos los campos del formulario
     document.getElementById('tipo-modificacion').value = '';
     document.getElementById('area-modificacion').value = '';
-    document.getElementById('concepto-modificacion').value = '';
-    document.getElementById('concepto-destino').value = '';
     document.getElementById('valor-modificacion').value = '';
     document.getElementById('justificacion-modificacion').value = '';
     
     // Limpiar las listas de conceptos
-    document.getElementById('concepto-modificacion').innerHTML = '';
-    document.getElementById('concepto-destino').innerHTML = '';
+    const conceptoSelect = document.getElementById('concepto-modificacion');
+    const conceptoDestinoSelect = document.getElementById('concepto-destino');
+    
+    conceptoSelect.innerHTML = '<option value="">-- Seleccione concepto --</option>';
+    conceptoDestinoSelect.innerHTML = '<option value="">-- Seleccione concepto destino --</option>';
     
     // Ocultar grupo de concepto destino
     document.getElementById('concepto-destino-group').style.display = 'none';
@@ -901,8 +905,9 @@ function resetearFormularioPostDistribucion() {
     // Actualizar contador
     actualizarContadorModificaciones();
     
-    // Mensaje específico para distribución
-    mostrarMensaje('✅ Distribución registrada correctamente. Formulario listo para nueva modificación.', 'success');
+    // Actualizar tablas
+    actualizarTablaModificaciones();
+    actualizarPresupuestoActualizado();
 }
 
 // Función específica para ocultar la sección de distribución
@@ -935,14 +940,15 @@ function limpiarFormulario() {
     // Limpiar todos los campos del formulario
     document.getElementById('tipo-modificacion').value = '';
     document.getElementById('area-modificacion').value = '';
-    document.getElementById('concepto-modificacion').value = '';
-    document.getElementById('concepto-destino').value = '';
     document.getElementById('valor-modificacion').value = '';
     document.getElementById('justificacion-modificacion').value = '';
     
     // Limpiar las listas de conceptos
-    document.getElementById('concepto-modificacion').innerHTML = '';
-    document.getElementById('concepto-destino').innerHTML = '';
+    const conceptoSelect = document.getElementById('concepto-modificacion');
+    const conceptoDestinoSelect = document.getElementById('concepto-destino');
+    
+    conceptoSelect.innerHTML = '<option value="">-- Seleccione concepto --</option>';
+    conceptoDestinoSelect.innerHTML = '<option value="">-- Seleccione concepto destino --</option>';
     
     // Ocultar grupo de concepto destino
     document.getElementById('concepto-destino-group').style.display = 'none';
@@ -959,14 +965,30 @@ function limpiarFormulario() {
 
 // Nueva función para reset completo después de operación exitosa
 function resetearFormularioCompleto() {
-    // Llamar a limpiar formulario (que ya maneja la distribución inteligentemente)
-    limpiarFormulario();
+    // Resetear todos los campos del formulario
+    document.getElementById('tipo-modificacion').value = '';
+    document.getElementById('area-modificacion').value = '';
+    document.getElementById('valor-modificacion').value = '';
+    document.getElementById('justificacion-modificacion').value = '';
+    
+    // Limpiar las listas de conceptos
+    const conceptoSelect = document.getElementById('concepto-modificacion');
+    const conceptoDestinoSelect = document.getElementById('concepto-destino');
+    
+    conceptoSelect.innerHTML = '<option value="">-- Seleccione concepto --</option>';
+    conceptoDestinoSelect.innerHTML = '<option value="">-- Seleccione concepto destino --</option>';
+    
+    // Ocultar grupo de concepto destino
+    document.getElementById('concepto-destino-group').style.display = 'none';
+    
+    // Habilitar área de modificación
+    document.getElementById('area-modificacion').disabled = false;
+    
+    // Ocultar sección de distribución si está visible
+    ocultarSeccionDistribucion();
     
     // Actualizar contador de modificaciones
     actualizarContadorModificaciones();
-    
-    // Mostrar mensaje de que se puede agregar otra modificación (sin delay para distribuciones)
-    mostrarMensaje('✅ Modificación guardada. Puede agregar otra modificación.', 'info');
 }
 
 // Función para actualizar el contador de modificaciones
