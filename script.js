@@ -50,12 +50,22 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('agregar-distribucion').addEventListener('click', agregarFilaDistribucion);
     document.getElementById('guardar-distribucion').addEventListener('click', guardarDistribucion);
     
-    // Eventos para análisis
-    document.getElementById('guardar-analisis').addEventListener('click', guardarAnalisis);
+    // Eventos para análisis y PDF
+    const botonPDF = document.getElementById('generar-pdf');
+    if (botonPDF) {
+        console.log('Botón de generar PDF encontrado');
+        botonPDF.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Botón PDF clickeado - iniciando generación');
+            generarPDF();
+        });
+    } else {
+        console.warn('Botón generar-pdf no encontrado en el DOM');
+    }
     
     // Eventos para exportación/importación
-    document.getElementById('exportar-datos').addEventListener('click', exportarDatos);
-    document.getElementById('importar-datos').addEventListener('change', importarDatos);
+    document.getElementById('exportar-datos')?.addEventListener('click', exportarDatos);
+    document.getElementById('importar-datos')?.addEventListener('change', importarDatos);
     
     // Cargar datos de ejemplo (para demostración)
     cargarDatosEjemplo();
@@ -1706,38 +1716,50 @@ document.getElementById('agregar-gasto').addEventListener('click', function () {
 });
 
 function generarPDF() {
-    // Mostrar mensaje de carga
-    mostrarMensaje("Generando PDF, por favor espere...", "info");
-    
-    // Crear un nuevo documento PDF
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'pt', 'a4');
-    
-    // Configuración general del PDF
-    const margin = 20;
-    let yPos = margin;
-    const pageWidth = doc.internal.pageSize.getWidth() - 2 * margin;
-    const pageHeight = doc.internal.pageSize.getHeight();
-
-    // ========= utilidades =========
-    const checkPageBreak = (heightNeeded) => {
-        if (yPos + heightNeeded > pageHeight - margin) {
-            doc.addPage();
-            yPos = margin;
+    try {
+        console.log('Iniciando generación de PDF...');
+        
+        // Verificar que jsPDF esté cargado
+        if (typeof window.jspdf === 'undefined') {
+            alert("Error: La librería jsPDF no está cargada. Por favor, recargue la página.");
+            console.error("jsPDF no encontrado");
+            return;
         }
-    };
 
-    // Aux para formatear números sin romper si no existe formatNumber global
-    const fmt = (n) => {
-        const val = Number.isFinite(+n) ? +n : 0;
-        try {
-            return (typeof formatNumber === 'function')
-                ? formatNumber(val)
-                : new Intl.NumberFormat('es-CO').format(val);
-        } catch {
-            return String(val);
-        }
-    };
+        // Mostrar mensaje de carga
+        mostrarMensaje("Generando PDF, por favor espere...", "info");
+        
+        // Crear un nuevo documento PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        
+        console.log('jsPDF inicializado correctamente');
+        
+        // Configuración general del PDF
+        const margin = 10;
+        let yPos = margin;
+        const pageWidth = doc.internal.pageSize.getWidth() - 2 * margin;
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        // ========= utilidades =========
+        const checkPageBreak = (heightNeeded) => {
+            if (yPos + heightNeeded > pageHeight - margin) {
+                doc.addPage();
+                yPos = margin;
+            }
+        };
+
+        // Aux para formatear números sin romper si no existe formatNumber global
+        const fmt = (n) => {
+            const val = Number.isFinite(+n) ? +n : 0;
+            try {
+                return (typeof formatNumber === 'function')
+                    ? formatNumber(val)
+                    : new Intl.NumberFormat('es-CO').format(val);
+            } catch {
+                return String(val);
+            }
+        };
 
     // ========= NUEVO: exportar Proyección (lee inputs y spans) =========
     // ========= NUEVO: exportar Proyección (lee inputs, spans y también "nuevo ingreso/gasto") =========
@@ -1882,98 +1904,100 @@ const exportarProyeccionAPDF = (tableId, titulo, totalBaseId, totalProjId, tipo)
     };
 
     // ========= Proceso de generación =========
-    (async () => {
-        try {
-            // === PÁGINA 1: Proyección Inicial (como pediste) ===
-            doc.setFontSize(18);
-            doc.setTextColor(40, 40, 40);
-            doc.text('Reporte de Análisis Presupuestal Municipal', pageWidth / 2 + margin, yPos + 20, { align: 'center' });
+    // === PÁGINA 1: Portada ===
+    doc.setFillColor(240, 240, 240);
+    doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), 'F');
+    
+    doc.setFontSize(22);
+    doc.setTextColor(44, 62, 80);
+    doc.text('ANÁLISIS PRESUPUESTAL', pageWidth / 2 + margin, 120, { align: 'center' });
+    doc.text('MUNICIPAL', pageWidth / 2 + margin, 160, { align: 'center' });
+    
+    doc.setFontSize(16);
+    doc.text('Período: 2025 - 2026', pageWidth / 2 + margin, 220, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.text('Generado por: App Contable', pageWidth / 2 + margin, 260, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date().toLocaleDateString('es-CO', { 
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    })}`, pageWidth / 2 + margin, 300, { align: 'center' });
 
-            doc.setFontSize(10);
-            doc.text(`Generado el: ${new Date().toLocaleDateString('es-CO', { 
-                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-            })}`, margin, yPos + 40);
-            yPos += 60;
+    // === PÁGINA 2: Proyección Inicial ===
+    doc.addPage();
+    yPos = margin;
+    
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Reporte de Análisis Presupuestal Municipal', pageWidth / 2 + margin, yPos + 20, { align: 'center' });
+    yPos += 60;
 
-            // Proyección de Ingresos y Gastos 2026 (lee Base, Tasa % y Proyectado)
-            exportarProyeccionAPDF('ingresos-table', 'Presupuesto de Ingresos 2026', 'total-ingresos-2025', 'total-ingresos-2026');
-            exportarProyeccionAPDF('gastos-table',   'Presupuesto de Gastos 2026',   'total-gastos-2025',   'total-gastos-2026');
+    // Proyección de Ingresos y Gastos 2026
+    exportarProyeccionAPDF('ingresos-table', 'Presupuesto de Ingresos 2026', 'total-ingresos-2025', 'total-ingresos-2026', 'ingreso');
+    exportarProyeccionAPDF('gastos-table', 'Presupuesto de Gastos 2026', 'total-gastos-2025', 'total-gastos-2026', 'gasto');
 
-            // === PÁGINA 2: Portada (se conserva igual que tu versión) ===
-            doc.addPage();
-            yPos = margin;
+    // === PÁGINA 3: Resumen Ejecutivo ===
+    doc.addPage();
+    yPos = margin;
 
-            doc.setFillColor(240, 240, 240);
-            doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), 'F');
-            
-            doc.setFontSize(22);
-            doc.setTextColor(44, 62, 80);
-            doc.text('ANÁLISIS PRESUPUESTAL', pageWidth / 2 + margin, 120, { align: 'center' });
-            doc.text('MUNICIPAL', pageWidth / 2 + margin, 160, { align: 'center' });
-            
-            doc.setFontSize(16);
-            doc.text(`Período: 2025 - 2026`, pageWidth / 2 + margin, 220, { align: 'center' });
-            
-            doc.setFontSize(12);
-            const autor = document.querySelector('footer p:nth-child(2)')?.textContent.replace('Desarrollada por: ', '') || '';
-            doc.text(`Generado por: ${"App Contable"}`, pageWidth / 2 + margin, 260, { align: 'center' });
+    agregarTextoAPDF('RESUMEN EJECUTIVO', 16, true);
+    agregarTextoAPDF('Este documento presenta un análisis completo del presupuesto municipal, incluyendo proyecciones, ejecución y modificaciones realizadas durante el período fiscal.', 10);
+    
+    // Datos clave
+    const totalIngresos = parseFloat((document.getElementById('total-ingresos-2026')?.textContent || '0').replace(/\./g, '')) || 0;
+    const totalGastos = parseFloat((document.getElementById('total-gastos-2026')?.textContent || '0').replace(/\./g, '')) || 0;
+    const diferencia = totalIngresos - totalGastos;
+    
+    agregarTextoAPDF('DATOS CLAVE:', 12, true);
+    agregarTextoAPDF(`• Total Ingresos 2026: $${fmt(totalIngresos)}`);
+    agregarTextoAPDF(`• Total Gastos 2026: $${fmt(totalGastos)}`);
+    agregarTextoAPDF(`• Resultado: ${diferencia >= 0 ? 'Superávit' : 'Déficit'} de $${fmt(Math.abs(diferencia))}`);
 
-            // === PÁGINA 3+: resto intacto ===
-            doc.addPage();
-            yPos = margin;
+    // === PÁGINA 4: Indicadores ===
+    agregarTextoAPDF('INDICADORES PRESUPUESTALES', 16, true);
+    agregarTextoAPDF(`• Ejecución de Ingresos: ${presupuesto.indicadores.ejecucionIngresos?.toFixed(2) || 0}%`);
+    agregarTextoAPDF(`• Ejecución de Gastos: ${presupuesto.indicadores.ejecucionGastos?.toFixed(2) || 0}%`);
+    agregarTextoAPDF(`• Relación Funcionamiento: ${presupuesto.indicadores.relacionFuncionamiento?.toFixed(2) || 0}%`);
+    agregarTextoAPDF(`• Dependencia Transferencias: ${presupuesto.indicadores.dependenciaTransferencias?.toFixed(2) || 0}%`);
 
-            // 2. Resumen ejecutivo
-            agregarTextoAPDF('RESUMEN EJECUTIVO', 16, true);
-            agregarTextoAPDF('Este documento presenta un análisis completo del presupuesto municipal, incluyendo proyecciones, ejecución y modificaciones realizadas durante el período fiscal.', 10);
-            
-            // Datos clave (usa los totales actuales de la UI)
-            const totalIngresos = parseFloat((document.getElementById('total-ingresos-2026')?.textContent || '0').replace(/\./g, '')) || 0;
-            const totalGastos = parseFloat((document.getElementById('total-gastos-2026')?.textContent || '0').replace(/\./g, '')) || 0;
-            const diferencia = totalIngresos - totalGastos;
-            
-            agregarTextoAPDF('DATOS CLAVE:', 12, true);
-            agregarTextoAPDF(`• Total Ingresos 2026: $${fmt(totalIngresos)}`);
-            agregarTextoAPDF(`• Total Gastos 2026: $${fmt(totalGastos)}`);
-            agregarTextoAPDF(`• Resultado: ${diferencia >= 0 ? 'Superávit' : 'Déficit'} de $${fmt(Math.abs(diferencia))}`);
+    // Tablas de datos
+    agregarTablaAPDF('indicadores-table', 'Tabla 1: Indicadores Presupuestales');
+    agregarTablaAPDF('modificaciones-table', 'Tabla 2: Historial de Modificaciones');
 
-            // 3. Indicadores calculados
-            agregarTextoAPDF('INDICADORES PRESUPUESTALES', 16, true);
-            agregarTextoAPDF(`• Ejecución de Ingresos: ${presupuesto.indicadores.ejecucionIngresos?.toFixed(2) || 0}%`);
-            agregarTextoAPDF(`• Ejecución de Gastos: ${presupuesto.indicadores.ejecucionGastos?.toFixed(2) || 0}%`);
-            agregarTextoAPDF(`• Relación Funcionamiento: ${presupuesto.indicadores.relacionFuncionamiento?.toFixed(2) || 0}%`);
-            agregarTextoAPDF(`• Dependencia Transferencias: ${presupuesto.indicadores.dependenciaTransferencias?.toFixed(2) || 0}%`);
+    // === PÁGINA 5: Análisis Cualitativo ===
+    doc.addPage();
+    yPos = margin;
+    agregarTextoAPDF('ANÁLISIS CUALITATIVO', 16, true);
+    const analisisText = document.getElementById('analisis-texto')?.value || 'No se ha ingresado análisis cualitativo.';
+    doc.setFontSize(11);
+    doc.text(analisisText, margin, yPos, { maxWidth: pageWidth });
 
-            // 4. Tablas de datos
-            agregarTablaAPDF('indicadores-table', 'Tabla 1: Indicadores Presupuestales');
-            agregarTablaAPDF('modificaciones-table', 'Tabla 2: Historial de Modificaciones');
+    // === PÁGINA 6: Conclusiones ===
+    doc.addPage();
+    yPos = margin;
+    agregarTextoAPDF('CONCLUSIONES Y RECOMENDACIONES', 16, true, 'center');
+    agregarTextoAPDF(' ', 12);
+    const recomendaciones = document.getElementById('recomendaciones')?.textContent || 'No se generaron recomendaciones automáticas.';
+    doc.setFontSize(11);
+    doc.text(recomendaciones, margin, yPos, { maxWidth: pageWidth });
 
-            // 5. Análisis cualitativo
-            agregarTextoAPDF('ANÁLISIS CUALITATIVO', 16, true);
-            const analisisText = document.getElementById('analisis-texto')?.value || 'No se ha ingresado análisis cualitativo.';
-            doc.setFontSize(11);
-            doc.text(analisisText, margin, yPos, { maxWidth: pageWidth });
-
-            // 6. Conclusiones y recomendaciones
-            doc.addPage();
-            yPos = margin;
-            agregarTextoAPDF('CONCLUSIONES Y RECOMENDACIONES', 16, true, 'center');
-            agregarTextoAPDF(' ', 12);
-            const recomendaciones = document.getElementById('recomendaciones')?.textContent || 'No se generaron recomendaciones automáticas.';
-            doc.setFontSize(11);
-            doc.text(recomendaciones, margin, yPos, { maxWidth: pageWidth });
-
-            // Guardar
-            doc.save(`Analisis_Presupuestal_${new Date().toISOString().split('T')[0]}.pdf`);
-            mostrarMensaje("PDF generado con éxito", "success");
-        } catch (error) {
-            console.error("Error al generar PDF:", error);
-            mostrarMensaje("Error al generar PDF: " + error.message, "danger");
-        }
-    })();
+    // Guardar PDF con manejo de errores
+    try {
+        const nombreArchivo = `Analisis_Presupuestal_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(nombreArchivo);
+        console.log('PDF guardado exitosamente:', nombreArchivo);
+        mostrarMensaje("✅ PDF generado y descargado exitosamente", "success");
+    } catch (saveError) {
+        console.error("Error al guardar PDF:", saveError);
+        throw new Error("No se pudo guardar el archivo PDF");
+    }
+    
+    } catch (error) {
+        console.error("Error al generar PDF:", error);
+        alert("Error al generar PDF: " + error.message + "\n\nPor favor, verifique que todas las librerías estén cargadas correctamente.");
+        mostrarMensaje("❌ Error al generar PDF: " + error.message, "danger");
+    }
 }
-
-
-// Agregar evento al botón de generar PDF
-document.getElementById('generar-pdf')?.addEventListener('click', generarPDF);
 
 
